@@ -13,5 +13,6 @@ convert_2sp_to_long(df)
 The transformed data frame
 }
 \description{
-Convert 2-prey data to long format
+brms requires univariate response values here. Transforms one row with
+bivariate (NE1,NE2) to two rows with NE=NE1 and NE=NE2, respectively.
 }

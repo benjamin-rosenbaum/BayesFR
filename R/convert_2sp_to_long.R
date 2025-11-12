@@ -1,5 +1,8 @@
 #' Convert 2-prey data to long format
 #'
+#' brms requires univariate response values here. Transforms one row with
+#' bivariate (NE1,NE2) to two rows with NE=NE1 and NE=NE2, respectively.
+#'
 #' @param df data frame with first four columns named: N01, N02, NE1, NE2
 #'
 #' @return The transformed data frame
