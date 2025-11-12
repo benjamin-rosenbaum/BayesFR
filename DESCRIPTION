@@ -1,13 +1,15 @@
 Package: BayesFR
-Title: What the Package Does (One Line, Title Case)
+Title: Fit functional responses in 1- and 2-prey systems
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+    person("Benjamin", "Rosenbaum", , "benjamin.rosenbaum@idiv.de", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2815-0874"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 URL: https://github.com/benjamin-rosenbaum/BayesFR
 BugReports: https://github.com/benjamin-rosenbaum/BayesFR/issues
+LazyData: TRUE
+Imports: 
+    tidyr
