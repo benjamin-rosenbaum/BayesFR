@@ -1,7 +1,9 @@
 #' Type 1 FR with prey depletion
 #'
 #' Contains Stan function of the same name as character string. Uses analytical
-#' solution to compute number of eaten prey.
+#' solution (exponential function) of the ODE
+#' \deqn{\frac{dN}{dt}=-aNP}{dN/dt=-aNP}
+#' to compute number of eaten prey.
 #'
 #' Usage in brms formula:\cr\cr
 #' \verb{~ Type1_dyn(N, a, P, Time)}\cr\cr
