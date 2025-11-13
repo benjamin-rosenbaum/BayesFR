@@ -15,7 +15,7 @@
 
 #' @return Number of eaten prey
 #' @export
-Type3H_dyn = "
+Type3H_dyn_code = "
 // prediction
 real Type3H_dyn(real N, real b, real h, real P, real Time){
   real p = ((-b*h*N*N-b*P*Time*N-1.0)/(b*h*N))/2.0;

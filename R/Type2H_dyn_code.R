@@ -15,7 +15,7 @@
 
 #' @return Number of eaten prey
 #' @export
-Type2H_dyn = "
+Type2H_dyn_code = "
 // prediction
 real Type2H_dyn(real N, real a, real h, real P, real Time){
   return(N-lambert_w0(a*h*N*exp(a*(h*N-P*Time)))/(a*h));

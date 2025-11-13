@@ -16,7 +16,7 @@
 
 #' @return Number of eaten prey
 #' @export
-Type3GenH_dyn = "
+Type3GenH_dyn_code = "
 // ODE function
 vector TypeGenODE(real t, vector y, vector theta){
   vector[1] dydt;

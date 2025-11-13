@@ -14,7 +14,7 @@
 
 #' @return Number of eaten prey
 #' @export
-Type1_dyn = "
+Type1_dyn_code = "
 // prediction
 real Type1_dyn(real N, real a, real P, real Time){
   return(N-N*exp(-a*P*Time));
