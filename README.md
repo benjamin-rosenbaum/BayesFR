@@ -29,3 +29,14 @@ install_github("benjamin-rosenbaum/BayesFR")
 ## Tutorials
 
 to do
+
+- [Minimal example: data with prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_01.html)
+- Minimal example: data without prey replacement
+- Model testing, model comparison, hypothesis testing: type 2 vs. type 3
+- Continuous predictors
+- Categorical predictors
+- Random effects
+- Likelihood functions and distributions
+- Prior distributions
+- Prey mortality and growth
+- Multi-species functional responses
