@@ -22,7 +22,7 @@ testing their hypotheses on trophic interactions.
 ## Installation
 
 ```r
-library(devtools)
+library(remotes)
 install_github("benjamin-rosenbaum/BayesFR")
 ```
 
