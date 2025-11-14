@@ -11,13 +11,13 @@ The brms framework facilitates statistical modelling and enables users to
 conveniently incorporate covariates such as temperature gradients, experimental 
 treatment variables, or random effects that account for grouping in 
 experimental units. Default brms functions make it easy to perform model 
-checking, model comparison and hypothesis testing. Potential statistical issues 
-with feeding experiment data, such as overdispersion or zero inflation, can be 
+checking, model comparisons and hypothesis testing. Potential statistical issues 
+with data from feeding trials, such as overdispersion or zero inflation, can be 
 resolved by effortlessly switching between likelihood functions.
 
 The BayesFR package, together with its tutorials, should provide students and 
-researchers with a complete and integrated statistical framework for easily 
-test their hypotheses on trophic interactions.
+researchers with a comprehensive and integrated statistical framework for easily 
+testing their hypotheses on trophic interactions.
 
 ## Installation
 
