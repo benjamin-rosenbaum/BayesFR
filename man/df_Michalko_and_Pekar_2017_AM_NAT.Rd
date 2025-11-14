@@ -3,7 +3,7 @@
 \docType{data}
 \name{df_Michalko_and_Pekar_2017_AM_NAT}
 \alias{df_Michalko_and_Pekar_2017_AM_NAT}
-\title{df_Michalko_and_Pekar_2017_AM_NAT}
+\title{Feeding experiments with prey replacement}
 \format{
 A data frame with 63 rows and 6 variables:
 \describe{

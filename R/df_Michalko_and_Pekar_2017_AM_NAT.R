@@ -1,4 +1,4 @@
-#' df_Michalko_and_Pekar_2017_AM_NAT
+#' Feeding experiments with prey replacement
 #'
 #' Feeding experiment data from Michalko and Pekar (2017) downloaded from the
 #' FoRAGE database (Uiterwaal et al. 2022). Eaten prey were replaced during the
