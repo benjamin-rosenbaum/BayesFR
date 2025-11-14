@@ -13,3 +13,5 @@ BugReports: https://github.com/benjamin-rosenbaum/BayesFR/issues
 LazyData: TRUE
 Imports: 
     tidyr
+Depends: 
+    R (>= 3.5)
