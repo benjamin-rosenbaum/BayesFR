@@ -1,6 +1,6 @@
 # BayesFR package
 
-## Fitting functional responses in R
+## Fitting functional responses in 1 and 2-prey systems
 
 Easy application of Bayesian inference for functional responses via 
 [brms](https://paulbuerkner.com/brms/). 
@@ -18,6 +18,10 @@ resolved by effortlessly switching between likelihood functions.
 The BayesFR package, together with its tutorials, should provide students and 
 researchers with a comprehensive and integrated statistical framework for easily 
 testing their hypotheses on trophic interactions.
+
+For an introduction to [brms](https://paulbuerkner.com/brms/), see for example 
+[here](https://github.com/benjamin-rosenbaum/bayesian-intro). 
+
 
 ## Installation
 
@@ -40,3 +44,25 @@ to do
 - Prior distributions
 - Prey mortality and growth
 - Multi-species functional responses
+
+## Citation
+
+I am working on a publication, but in the meantime please cite Rosenbaum & Rall 
+(2018) for single prey systems, and Rosenbaum et al. (2024) for multi prey systems. 
+All datasets in this package were downloaded from the FoRAGE database (Uiterwaal et al. 2022).
+
+Rosenbaum B. & Rall B. C. (2018). *Fitting functional responses: Direct parameter 
+estimation by simulating differential equations.* Methods in Ecology and Evolution, 
+9(10), 2076–2090. [https://doi.org/10.1111/2041-210X.13039](https://doi.org/10.1111/2041-210X.13039)
+
+Rosenbaum B., Li J., Hirt M. R., Ryser R. & Brose, U. (2024). *Towards understanding 
+interactions in a complex world: Design and analysis of multi‐species functional 
+response experiments.* Methods in Ecology and Evolution, 15(9), 1704–1719. 
+[https://doi.org/10.1111/2041-210x.14372](https://doi.org/10.1111/2041-210x.14372)
+
+Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong J. P. (2022). *FoRAGE 
+Database: A Compilation of Functional Responses for Consumers and Parasitoids.* 
+Ecology 103(7): e3706. [https://doi.org/10.1002/ecy.3706](https://doi.org/10.1002/ecy.3706)
+
+DeLong J. P. & Uiterwaal S. F. (2024). *FoRAGE database V5.* [https://doi.org/10.5063/F1RX99KB](https://doi.org/10.5063/F1RX99KB)
+
