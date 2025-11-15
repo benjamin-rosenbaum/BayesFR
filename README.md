@@ -60,7 +60,7 @@ interactions in a complex world: Design and analysis of multi‐species function
 response experiments.* Methods in Ecology and Evolution, 15(9), 1704–1719. 
 [https://doi.org/10.1111/2041-210x.14372](https://doi.org/10.1111/2041-210x.14372)
 
-Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong J. P. (2022). *FoRAGE 
+Uiterwaal S. F., Lagerstrom I. T., Lyon S. R. & DeLong J. P. (2022). *FoRAGE 
 Database: A Compilation of Functional Responses for Consumers and Parasitoids.* 
 Ecology 103(7): e3706. [https://doi.org/10.1002/ecy.3706](https://doi.org/10.1002/ecy.3706)
 
