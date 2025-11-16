@@ -58,10 +58,10 @@ to do
 - Prey mortality and growth
 - Multi-species functional responses
 
-## Citation
+## References
 
 I am working on a publication, but in the meantime please cite Rosenbaum & Rall 
-(2018) for single prey systems, and Rosenbaum et al. (2024) for multi prey systems. 
+(2018) for single prey systems, or Rosenbaum et al. (2024) for multi prey systems. 
 All datasets in this package were downloaded from the FoRAGE database (Uiterwaal et al. 2022).
 
 Rosenbaum B. & Rall B. C. (2018). *Fitting functional responses: Direct parameter 
