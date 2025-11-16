@@ -9,7 +9,7 @@ FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
 fit.1      = brm(FR.formula,
                  family   = binomial(link="identity"),
                  prior    = FR.priors,
-                 stanvars = stanvar(scode = Type3H_dyn_code, block = "functions"),
+                 stanvars = stanvar(scode=Type3H_dyn_code, block="functions"),
                  data     = df )
 ```
 
