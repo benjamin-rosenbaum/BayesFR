@@ -1,5 +1,18 @@
 # BayesFR package
 
+```r
+# Example code for fitting a Type 3 FR dynamical model:
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,b,h,P0,Time)/N0,
+                 b~1, h~1, nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0) )
+fit.1      = brm(FR.formula,
+                 family   = binomial(link="identity"),
+                 prior    = FR.priors,
+                 stanvars = stanvar(scode = Type3H_dyn_code, block = "functions"),
+                 data     = df )
+```
+
 ## Fitting functional responses in 1 and 2-prey systems
 
 Easy application of Bayesian inference for functional responses via 
@@ -22,18 +35,6 @@ testing their hypotheses on trophic interactions.
 For an introduction to [brms](https://paulbuerkner.com/brms/), see for example 
 [here](https://github.com/benjamin-rosenbaum/bayesian-intro). 
 
-```r
-# Example code for fitting a Type 3 FR dynamical model:
-FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,b,h,P0,Time)/N0,
-                 b~1, h~1, nl = TRUE)
-FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
-               prior(exponential(1.0), nlpar="h", lb=0) )
-fit.1      = brm(FR.formula,
-                 family   = binomial(link="identity"),
-                 prior    = FR.priors,
-                 stanvars = stanvar(scode = Type2H_dyn_code, block = "functions"),
-                 data     = df )
-```
 
 ## Installation
 
