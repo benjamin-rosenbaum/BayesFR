@@ -2,7 +2,7 @@
 
 ```r
 # Example code for fitting a Type 3 FR dynamical model:
-FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,b,h,P0,Time)/N0,
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,P0,Time,b,h)/N0,
                  b~1, h~1, nl = TRUE)
 FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
                prior(exponential(1.0), nlpar="h", lb=0) )

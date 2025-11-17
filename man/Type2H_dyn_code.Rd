@@ -21,11 +21,11 @@ to compute number of eaten prey.
 }
 \details{
 Usage in brms formula:\cr\cr
-\verb{~ Type2H_dyn(N, a, h, P, Time)}\cr\cr
+\verb{~ Type2H_dyn(N, P, Time, a, h)}\cr\cr
 \verb{N    } initial number of prey \cr
-\verb{a    } attack rate \cr
-\verb{h    } handling time \cr
 \verb{P    } number of predators \cr
-\verb{Time } duration of the experiment
+\verb{Time } duration of the experiment \cr
+\verb{a    } attack rate \cr
+\verb{h    } handling time
 }
 \keyword{datasets}

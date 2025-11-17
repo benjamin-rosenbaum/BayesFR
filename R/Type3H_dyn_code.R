@@ -6,18 +6,18 @@
 #' to compute number of eaten prey.
 #'
 #' Usage in brms formula:\cr\cr
-#' \verb{~ Type3H_dyn(N, b, h, P, Time)}\cr\cr
+#' \verb{~ Type3H_dyn(N, P, Time, b, h)}\cr\cr
 #' \verb{N    } initial number of prey \cr
-#' \verb{b    } attack coefficient \cr
-#' \verb{h    } handling time \cr
 #' \verb{P    } number of predators \cr
-#' \verb{Time } duration of the experiment
+#' \verb{Time } duration of the experiment \cr
+#' \verb{b    } attack coefficient \cr
+#' \verb{h    } handling time
 
 #' @return Number of eaten prey
 #' @export
 Type3H_dyn_code = "
 // prediction
-real Type3H_dyn(real N, real b, real h, real P, real Time){
+real Type3H_dyn(real N, real P, real Time, real b, real h){
   real p = ((-b*h*N*N-b*P*Time*N-1.0)/(b*h*N))/2.0;
   real q = P*Time*N/h;
   return(-p-sqrt(p*p-q));

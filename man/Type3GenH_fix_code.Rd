@@ -20,12 +20,12 @@ Number of eaten prey:
 }
 \details{
 Usage in brms formula:\cr\cr
-\verb{~ Type3GenH_fix(N, b, h, q, P, Time)}\cr\cr
+\verb{~ Type3GenH_fix(N, P, Time, b, h, q)}\cr\cr
 \verb{N    } initial number of prey \cr
+\verb{P    } number of predators \cr
+\verb{Time } duration of the experiment \cr
 \verb{b    } attack coefficient \cr
 \verb{q    } attack exponent \cr
-\verb{h    } handling time \cr
-\verb{P    } number of predators \cr
-\verb{Time } duration of the experiment
+\verb{h    } handling time
 }
 \keyword{datasets}

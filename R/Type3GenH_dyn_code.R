@@ -6,13 +6,13 @@
 #' to compute number of eaten prey.
 #'
 #' Usage in brms formula:\cr\cr
-#' \verb{~ Type3GenH_dyn(N, b, h, q, P, Time)}\cr\cr
+#' \verb{~ Type3GenH_dyn(N, P, Time, b, h, q)}\cr\cr
 #' \verb{N    } initial number of prey \cr
+#' \verb{P    } number of predators \cr
+#' \verb{Time } duration of the experiment \cr
 #' \verb{b    } attack coefficient \cr
 #' \verb{q    } attack exponent \cr
-#' \verb{h    } handling time \cr
-#' \verb{P    } number of predators \cr
-#' \verb{Time } duration of the experiment
+#' \verb{h    } handling time
 
 #' @return Number of eaten prey
 #' @export
@@ -28,7 +28,7 @@ vector TypeGenODE(real t, vector y, vector theta){
   return dydt;
 }
 // prediction
-real Type3GenH_dyn(real N, real b, real h, real q, real P, real Time){
+real Type3GenH_dyn(real N, real P, real Time, real b, real h, real q){
   array[1] vector[1]  y;
   vector[4] theta;
   theta[1] = b;
