@@ -48,7 +48,7 @@ install_github("benjamin-rosenbaum/BayesFR")
 to do
 
 - [Minimal example: data with prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_01.html)
-- Minimal example: data without prey replacement
+- [Minimal example: data without prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_02.html)
 - Model testing, model comparison, hypothesis testing: type 2 vs. type 3
 - Continuous predictors
 - Categorical predictors
