@@ -13,7 +13,7 @@ fit.1      = brm(FR.formula,
                  data     = df )
 ```
 
-## Fitting functional responses in 1 and 2-prey systems
+## Fitting functional responses in 1- and 2-prey systems
 
 Easy application of Bayesian inference for functional responses via 
 [brms](https://paulbuerkner.com/brms/). 
@@ -24,11 +24,11 @@ The brms framework facilitates statistical modelling and enables users to
 conveniently incorporate covariates such as temperature gradients, experimental 
 treatment variables, or random effects that account for grouping in 
 experimental units. Default brms functions make it easy to perform model 
-checking, model comparisons and hypothesis testing. Potential statistical issues 
+checking, model comparison and hypothesis testing. Potential statistical issues 
 with data from feeding trials, such as overdispersion or zero inflation, can be 
 resolved by effortlessly switching between likelihood functions.
 
-The BayesFR package, together with its tutorials, should provide students and 
+The BayesFR package, together with its tutorials, provides students and 
 researchers with a comprehensive and integrated statistical framework for easily 
 testing their hypotheses on trophic interactions.
 
@@ -50,8 +50,8 @@ to do
 - [Minimal example: data with prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_01.html)
 - [Minimal example: data without prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_02.html)
 - [Model testing, model comparison, hypothesis testing: type 2 vs. type 3](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_03.html)
-- Continuous predictors
 - Categorical predictors
+- Continuous predictors
 - Random effects
 - Likelihood functions and distributions
 - Prior distributions
@@ -61,7 +61,7 @@ to do
 ## References
 
 I am working on a publication, but in the meantime please cite Rosenbaum & Rall 
-(2018) for single prey systems, or Rosenbaum et al. (2024) for multi prey systems. 
+(2018) for single-prey systems, or Rosenbaum et al. (2024) for multi-prey systems. 
 All datasets in this package were downloaded from the FoRAGE database (Uiterwaal et al. 2022).
 
 Rosenbaum B. & Rall B. C. (2018). *Fitting functional responses: Direct parameter 
