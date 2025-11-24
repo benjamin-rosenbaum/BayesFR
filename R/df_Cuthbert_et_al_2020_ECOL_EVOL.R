@@ -1,0 +1,39 @@
+#' Example dataset for categorical predictors
+#'
+#' Feeding experiment data from Cuthbert et al. (2020) downloaded from the
+#' FoRAGE database (Uiterwaal et al. 2022). Eaten prey were not replaced during the
+#' experiment. Includes data for two fish species (largemouth bass and bluegill)
+#' feeding on tilapia. Both predator and prey were categorized in three size classes,
+#' each, with a full factorial treatment.
+#'
+#' @format A data frame with 358 rows and 7 variables:
+#' \describe{
+#'   \item{N0}{Number of initial prey}
+#'   \item{NE}{Number of eaten prey}
+#'   \item{Time}{Duration (h)}
+#'   \item{Predator}{Predator species}
+#'   \item{Prey}{Prey species}
+#'   \item{PredSize}{Predator size class}
+#'   \item{PreySize}{Prey size class}
+#' }
+#'
+#' @source
+#'   Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., and Alexander M.E. (2020),
+#'   *Influence of intra- and interspecific variation in predator–prey body size ratios on trophic interaction strengths.*
+#'   Ecology and Evolution, 10:5946–5962.
+#'   https://doi.org/10.1002/ece3.6332
+#'
+#'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022),
+#'   *FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.*
+#'   Ecology 103(7): e3706.
+#'   https://doi.org/10.1002/ecy.3706
+#'
+#'   FoRAGE database V5 (2024).
+#'   https://doi.org/10.5063/F1RX99KB
+#'
+#' @usage data(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY)
+#'
+#' @examples
+#' data(df_Cuthbert_et_al_2020_ECOL_EVOL)
+#' head(df_Cuthbert_et_al_2020_ECOL_EVOL)
+"df_Cuthbert_et_al_2020_ECOL_EVOL"

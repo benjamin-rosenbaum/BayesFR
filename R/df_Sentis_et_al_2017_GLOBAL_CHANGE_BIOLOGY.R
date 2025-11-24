@@ -1,4 +1,4 @@
-#' Example
+#' Example dataset for testing type 2 vs. type 3
 #'
 #' Feeding experiment data from Sentis et al. (2017) downloaded from the
 #' FoRAGE database (Uiterwaal et al. 2022). Eaten prey were not replaced during the

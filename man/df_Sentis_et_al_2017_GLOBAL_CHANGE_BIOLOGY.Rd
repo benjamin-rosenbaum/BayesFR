@@ -3,7 +3,7 @@
 \docType{data}
 \name{df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY}
 \alias{df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY}
-\title{Example}
+\title{Example dataset for testing type 2 vs. type 3}
 \format{
 A data frame with 327 rows and 7 variables:
 \describe{
