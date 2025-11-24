@@ -31,7 +31,7 @@
 #'   FoRAGE database V5 (2024).
 #'   https://doi.org/10.5063/F1RX99KB
 #'
-#' @usage data(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY)
+#' @usage data(df_Cuthbert_et_al_2020_ECOL_EVOL)
 #'
 #' @examples
 #' data(df_Cuthbert_et_al_2020_ECOL_EVOL)
