@@ -50,7 +50,7 @@ to do
 - [Minimal example: data with prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_01.html)
 - [Minimal example: data without prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_02.html)
 - [Model testing, model comparison, hypothesis testing: type 2 vs. type 3](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_03.html)
-- Categorical predictors
+- [Categorical predictors: predator and prey size classes](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_04.html)
 - Continuous predictors
 - Random effects
 - Likelihood functions and distributions
@@ -60,9 +60,10 @@ to do
 
 ## References
 
-I am working on a publication, but in the meantime please cite Rosenbaum & Rall 
-(2018) for single-prey systems, or Rosenbaum et al. (2024) for multi-prey systems. 
-All datasets in this package were downloaded from the FoRAGE database (Uiterwaal et al. 2022).
+While a publication is in progress, please cite Rosenbaum & Rall (2018) for single-prey 
+systems, or Rosenbaum et al. (2024) for multi-prey systems. The FoRAGE database 
+(Uiterwaal et al. 2022) was searched for suitable example datasets, and data was 
+downloaded from original sources when available.
 
 Rosenbaum B. & Rall B. C. (2018). *Fitting functional responses: Direct parameter 
 estimation by simulating differential equations.* Methods in Ecology and Evolution, 
@@ -76,6 +77,4 @@ response experiments.* Methods in Ecology and Evolution, 15(9), 1704–1719.
 Uiterwaal S. F., Lagerstrom I. T., Lyon S. R. & DeLong J. P. (2022). *FoRAGE 
 Database: A Compilation of Functional Responses for Consumers and Parasitoids.* 
 Ecology 103(7): e3706. [https://doi.org/10.1002/ecy.3706](https://doi.org/10.1002/ecy.3706)
-
-DeLong J. P. & Uiterwaal S. F. (2024). *FoRAGE database V5.* [https://doi.org/10.5063/F1RX99KB](https://doi.org/10.5063/F1RX99KB)
 
