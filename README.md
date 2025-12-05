@@ -51,7 +51,7 @@ to do
 - [Minimal example: data without prey replacement](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_02.html)
 - [Model testing, model comparison, hypothesis testing: type 2 vs. type 3](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_03.html)
 - [Categorical predictors: predator and prey size classes](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_04.html)
-- Continuous predictors
+- [Continuous predictors: size and temperature gradients](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_05.html)
 - Random effects
 - Likelihood functions and distributions
 - Prior distributions
