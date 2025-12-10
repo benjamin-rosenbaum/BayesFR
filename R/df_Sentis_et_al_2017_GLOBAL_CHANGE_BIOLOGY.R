@@ -22,7 +22,7 @@
 #'   Global Change Biology, 23: 2629-2640.
 #'   https://doi.org/10.1111/gcb.13560
 #'
-#'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022),
+#'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022).
 #'   *FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.*
 #'   Ecology 103(7): e3706.
 #'   https://doi.org/10.1002/ecy.3706

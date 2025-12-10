@@ -22,12 +22,12 @@
 #' }
 #'
 #' @source
-#'   Archer L. C., Sohlström E. H., Gallo B., Jochum M., Woodward G., Kordas R. L., Rall B. C. & O'Gorman E. J. (2019a),
+#'   Archer L. C., Sohlström E. H., Gallo B., Jochum M., Woodward G., Kordas R. L., Rall B. C. & O'Gorman E. J. (2019a).
 #'   *Consistent temperature dependence of functional response parameters and their use in predicting population abundance.*
 #'   Journal of Animal Ecology, 88:1670–1683.
 #'   https://doi.org/10.1111/1365-2656.13060
 #'
-#'   Archer L. C., Sohlström E. H., Gallo B., Jochum M., Woodward G., Kordas R. L., Rall B. C. & O'Gorman E. J. (2019b),
+#'   Archer L. C., Sohlström E. H., Gallo B., Jochum M., Woodward G., Kordas R. L., Rall B. C. & O'Gorman E. J. (2019b).
 #'   *Consistent temperature dependence of functional response parameters and their use in predicting population abundance.*
 #'   Dryad Digital Repository.
 #'   https://doi.org/10.5061/dryad.tr4v447

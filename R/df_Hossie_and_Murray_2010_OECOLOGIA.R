@@ -21,7 +21,7 @@
 #'   Oecologia, 163, 395–404.
 #'   https://doi.org/10.1007/s00442-010-1568-6
 #'
-#'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022),
+#'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022).
 #'   *FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.*
 #'   Ecology 103(7): e3706.
 #'   https://doi.org/10.1002/ecy.3706
