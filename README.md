@@ -50,7 +50,7 @@ install_github("benjamin-rosenbaum/BayesFR")
 - [Model testing, model comparison, hypothesis testing: type 2 vs. type 3](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_03.html)
 - [Categorical predictors: predator and prey size classes](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_04.html)
 - [Continuous predictors: size and temperature gradients](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_05.html)
-- Random effects
+- [Random effects: individual- and population-level estimates ](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_06.html)
 - Prey mortality
 - Predator interference
 - Likelihood functions and distributions
