@@ -17,12 +17,12 @@ A data frame with 358 rows and 7 variables:
 }
 }
 \source{
-Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., and Alexander M.E. (2020a),
+Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., & Alexander M.E. (2020a).
 \emph{Influence of intra- and interspecific variation in predator–prey body size ratios on trophic interaction strengths.}
 Ecology and Evolution, 10:5946–5962.
 https://doi.org/10.1002/ece3.6332
 
-Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., and Alexander M.E. (2020b),
+Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., & Alexander M.E. (2020b).
 \emph{Influence of intra- and interspecific variation in predator–prey body size ratios on trophic interaction strengths.}
 Dryad Digital Repository.
 https://doi.org/10.5061/dryad.7m0cfxppt

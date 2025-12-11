@@ -18,13 +18,13 @@ A data frame with 686 rows and 8 variables:
 }
 }
 \source{
-Schröder A., Kalinkat G. & Arlinghaus R. (2016),
-\emph{Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish}
+Schröder A., Kalinkat G. & Arlinghaus R. (2016).
+\emph{Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.}
 Oecologia, 88:1670–1683.
 https://doi.org/10.1007/s00442-016-3701-7
 
-Kalinkat G., Schröder A. & Arlinghaus R. (2025),
-\emph{Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish}
+Kalinkat G., Schröder A. & Arlinghaus R. (2025).
+\emph{Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.}
 Figshare.
 https://doi.org/10.6084/m9.figshare.24665880
 }

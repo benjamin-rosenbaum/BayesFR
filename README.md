@@ -52,6 +52,7 @@ install_github("benjamin-rosenbaum/BayesFR")
 - [Continuous predictors: size and temperature gradients](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_05.html)
 - Random effects
 - Prey mortality
+- Predator interference
 - Likelihood functions and distributions
 - Prior distributions
 - Multi-species functional responses
