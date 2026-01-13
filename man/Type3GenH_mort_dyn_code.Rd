@@ -21,8 +21,8 @@ to compute number of eaten / dead prey. It can compute predictions for feeding
 trials (observations with \verb{P>0}) and also control treatments (\verb{P=0}),
 for which the ODE reduces to
 \deqn{\frac{dN}{dt}=-mN}{dN/dt=-mN}
-The exponent \verb{q} can be fixed for fitting type 2 responses (\verb{q=1}) or
-type 3 responses (\verb{q=2}), which both do not have an analytical solution
+The exponent \verb{q} can be fixed for fitting type 2 responses (\verb{q=0}) or
+type 3 responses (\verb{q=1}), which both do not have an analytical solution
 with additional and prey mortality have to be predicted using the ODE.
 }
 \details{
@@ -37,8 +37,8 @@ Usage in brms formula:\cr\cr
 \verb{m    } mortality rate
 
 Type 2 functional response: \cr\cr
-\verb{~ Type3GenH_dyn(N, P, Time, a, h, 1, m)}\cr\cr
+\verb{~ Type3GenH_dyn(N, P, Time, a, h, 0, m)}\cr\cr
 Type 3 functional response: \cr\cr
-\verb{~ Type3GenH_dyn(N, P, Time, b, h, 2, m)}
+\verb{~ Type3GenH_dyn(N, P, Time, b, h, 1, m)}
 }
 \keyword{datasets}
