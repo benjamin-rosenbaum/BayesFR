@@ -1,0 +1,385 @@
+---
+title: "Random effects"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3   
+    toc-title: "Contents" 
+    toc-float: true
+    toc-location: left
+---
+
+In many experiments, observations are not completely independent. Observations are grouped in units, and observations from the same unit are expected to behave more similar than observations from different units, under otherwise identical treatment conditions. For example, field experiments are grouped in different plots, or measurements are taken in different years. Treating all observations as independent leads to **pseudoreplication**, often resulting in lower uncertainty of parameter estimates and thus type-1 error inflation (false positive findings). Random-effects or mixed-effects models help accounting for random grouping variables (e.g., plot or year) and attributing uncertainty correctly. 
+
+In feeding experiments, **predator individuals are often re-used** for multiple feeding trials. Even when randomizing treatment conditions, predator ID acts as a grouping variable. Therefore observations are not independent, because, for example, attack rates and handling times are predator individuals' traits. If the goal is to estimate a population-level mean attack rate and handling time, fitting a single attack rate and handling time `a~1, h~1` will probably not explain a lot of the observed variance, if predator individuals are heterogeneous (e.g. different size). Also, estimates will be overly confident (falsely reduced uncertainty) due to the pseudoreplication. Alternatively, using predator ID as a predictor `a~ID, h~ID` and fitting predator-individual parameters will increase the amount of explained variation. However, this model will not produce estimates of population-level effects, which we are interested in. The solution is to use predator ID as a random effect, and a model such as `a~(1|ID), h~(1|ID)` will estimate population-level mean attack rates and handling times, as well as the individuals' deviations from the population means. 
+
+As an example, we here work with data from [Schröder et al. (2016)](https://doi.org/10.1007/s00442-016-3701-7), downloaded from [Figshare](https://doi.org/10.6084/m9.figshare.24665880). It contains data from 49 individual least killifish feeding on nauplii. Feeding trials lasted 2 minutes and eaten prey were not replaced. Size of the predator individuals was recorded, but for didactic reasons we will ignore this predictor for now. 
+
+```{r}
+#| warning: false
+rm(list=ls())
+library(BayesFR)
+library(cowplot) # ggplot grids
+library(mvtnorm) # multivariate normal distribution
+
+df = df_Schroeder_et_al_2016_OEC
+head(df)
+# correct a counting error:
+for(i in 1:nrow(df)){
+  df$NE[i] = min(df$NE[i], df$N0[i])
+}
+ggplot(df, aes(N0,NE)) +
+  geom_point(alpha=0.2, size=2)
+```
+
+There is a substantial variation in the amount of eaten prey!
+
+## Fixed effects
+
+We want to estimate population-level attack rate and handling time with a type 2 functional response. Ignoring pseudoreplication, we first fit a simple model using `a~1, h~1`. This is also called **complete pooling**, i.e. all information is pooled across predator individuals. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a+h ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+summary(fit.1)
+```
+
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.1 = readRDS(file="fit_1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.1)
+```
+
+Credible intervals of parameter estimates are very narrow, as are credible intervals of the regression curve:
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         int_conditions = data.frame(N0=seq(10,2000,by=10))),
+     points = TRUE,
+     point_args = list(alpha=0.2, size=2))
+```
+The prediction intervals, which include the Binomial distribution of the response around the mean fitted values, do not capture the observed variation in number of eaten prey.
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         int_conditions = data.frame(N0=seq(10,2000,by=10)),
+                         method = "posterior_predict"),
+     points = TRUE,
+     point_args = list(alpha=0.2, size=2))
+```
+This is also reflected in the posterior predictive check, which shows a substantial mismatch between the observed and predicted distribution of response values.
+```{r}
+#| warning: false
+pp_check(fit.1, ndraws=100)
+```
+
+Alternatively, we could fit a model with individual attack rates and handling times for each predator, using predator ID as a categorical predictor `a~ID, h~ID`. Predator ID is a fixed effect here. This is also called **no pooling**, since no information is shared across predator individuals. However, we don't get an estimate for population-level means. We skip this model here and move on the random effects.
+
+## Random effects
+
+We need a model that estimates population-level effects, and accounts for the grouping factor predator ID as well. The random effects model `a~(1|ID), h~(1|ID)` estimates individual parameters $a_i$ and $h_i$ for the 49 predator individuals, assuming they are normally distributed
+$$a_i\sim\text{Normal}\left(\mu_a,\sigma_a\right)$$
+$$h_i\sim\text{Normal}\left(\mu_h,\sigma_h\right)$$
+with population-level means $\mu_a$ and $\mu_h$. These means and the standard deviations are free model parameters. This approach is called **partial pooling**, since information is shared across predator individuals by assuming they have a joint distribution.
+
+There is only one problem: this model does not guarantee positive estimates for attack rate and handling times. But we can easily apply a log-link as seen before, defining parameters on their log scale:
+$$loga_i\sim\text{Normal}\left(\mu_{loga},\sigma_{loga}\right)$$
+$$logh_i\sim\text{Normal}\left(\mu_{logh},\sigma_{logh}\right)$$
+This is equivalent to assuming that individual attack rates and handling times (after transforming them back to original scale) follow a log-normal distribution. In brms, the (linear) random effects model `loga~(1|ID)` and the transformation `nlf(a~exp(loga))` are easily specified in the model formula, same for handling time. We can choose priors for the $\mu$ and $\sigma$ (on logscale). We do not need any priors for the individual $loga_i$ and $logh_i$, since these are already defined through the random effects model.
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 nlf(a~exp(loga)),
+                 nlf(h~exp(logh)),
+                 loga ~ (1|ID),
+                 logh ~ (1|ID),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,10), nlpar="loga"),
+               prior(normal(0,10), nlpar="logh"),
+               prior(exponential(0.1), nlpar="loga", class="sd", lb=0),
+               prior(exponential(0.1), nlpar="logh", class="sd", lb=0)
+)
+fit.2 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            iter     = 3000,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.2 = readRDS(file="fit_2.rds")
+expose_functions(fit.2, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.2)
+```
+
+The summary table displays estimates for population-level means `loga_Intercept` and the standard deviation of individual parameters `sd(loga_Intercept)` (all on logscale). It does not show the individual attack rates and handling times. These are computed with the `fitted()` function by specifying `nlpar=` and supplying predator IDs in `newdata=`. 
+```{r}
+new.data = unique(df$ID)
+new.data = data.frame(ID = new.data,
+                      N0 = 1) # dummy, supply any value
+loga.pred = fitted(fit.2, nlpar="loga", newdata=new.data)
+logh.pred = fitted(fit.2, nlpar="logh", newdata=new.data)
+head(loga.pred)
+head(logh.pred)
+new.data$loga = loga.pred[, "Estimate"]
+new.data$logh = logh.pred[, "Estimate"]
+ggplot(new.data, aes(loga,logh)) + geom_point()
+```
+
+The individual-level estimates on original scale, also called **conditional estimates**, are computed similarly.
+
+```{r}
+a.pred = fitted(fit.2, nlpar="a", newdata=new.data)
+h.pred = fitted(fit.2, nlpar="h", newdata=new.data)
+new.data$a = a.pred[, "Estimate"]
+new.data$h = h.pred[, "Estimate"]
+ggplot(new.data, aes(a,h)) + geom_point()
+```
+
+We still don't know the population-level estimates on original scale, also called **marginal estimates**. Parameters `loga_Intercept` and `logh_Intercept` are on logscale. Although tempting, one should not compute the marginal estimates by applying `exp()` to the mean estimates. The mean is not invariant under nonlinear transformation. Only applying the transformation to all posterior samples and then computing mean and standard deviation produces correct quantities. Here, we specify `re_formula=NA`, which omits the random effects part and gives the right answer. 
+
+```{r}
+fitted(fit.2, nlpar="a", newdata=data.frame(N0=1), re_formula=NA)
+fitted(fit.2, nlpar="h", newdata=data.frame(N0=1), re_formula=NA)
+```
+
+Ironically, `conditional_effects` plots **marginal effects** by default. Here, population-level predictions are shown. The credible intervals are much wider than in the previous model (`a+h~1`). 
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.2,
+                         ndraws = 200,
+                         int_conditions = data.frame(N0=seq(10,2000,by=10))),
+     points = TRUE,
+     point_args = list(alpha=0.2, size=2))
+```
+
+**Conditional effects** are plotted when specifying `re_formula=NULL`, including random effects defined by predator ID in `conditions=`. Slightly confusing, `re_formula=NULL` always includes random effects, while `re_formula=NA` omits them. Here, data and model fits for the 49 individuals are plotted separately. 
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.2,
+                              ndraws = 200,
+                              int_conditions = data.frame(N0=seq(10,2000,by=10)),
+                              conditions = make_conditions(fit.2, var="ID"),
+                              re_formula = NULL,
+                              prob = 0),
+          points = TRUE,
+          point_args = list(alpha=0.5, size=2),
+          plot = FALSE)
+p1[[1]] + theme(strip.text = element_blank(),
+                strip.background = element_blank())
+```
+Alternatively, they are put in a single plot when specifying predator ID in `effect="N0:ID"`.
+```{r}
+#| warning: false
+plot(conditional_effects(fit.2,
+                         ndraws = 200,
+                         int_conditions = data.frame(N0=seq(10,2000,by=10)),
+                         effect = "N0:ID",
+                         re_formula = NULL,
+                         prob = 0),
+     points = TRUE,
+     point_args = list(alpha=0.5, size=2))
+
+```
+
+Posterior predictive checks show a much better coverage of the data distribution now.
+```{r}
+#| warning: false
+pp_check(fit.2, ndraws=100)
+```
+
+Finally, conditional R2 (default) and marginal R2 (`re_formula=NA`) can be computed:
+
+```{r}
+bayes_R2(fit.2, ndraws=500)
+bayes_R2(fit.2, ndraws=500, re_formula=NA)
+```
+
+
+## Random effects with correlation
+
+In the previous model, we observed a negative correlation between attack rates and handling times. Their relationship, on logscale at least, was approximately linear and negative. This can be explained through body size: bigger predators can cover a larger area and also handle prey faster than smaller predators in a given time. Even without including body size explicitly, this relationship can be modelled via a covariance matrix. Instead of assuming attack rates and handling times are independent as above, their are now modelled with a **multivariate normal distribution**
+$$\begin{pmatrix} loga_i \\ logh_i  \end{pmatrix}\sim\text{MVN}\left(\mu,\Sigma\right)$$
+Its mean vector and covariance matrix are defined as
+$$\mu=\begin{pmatrix} \mu_a \\ \mu_b  \end{pmatrix},\ \  
+\Sigma=\begin{pmatrix} \sigma_a^2 & \rho_{ah}  \sigma_a\sigma_h \\ \rho_{ah}  \sigma_a\sigma_h & \sigma_h^2 \end{pmatrix}$$
+(dropping the log in subscripts for readability) with $\mu_a,\mu_h,\sigma_a,\sigma_h$ as above and a new parameter $\rho_{ah}$ describing the correlation between $loga_i$ and $logh_i$. This is standard practice in linear mixed models where, for instance, intercepts and slopes are modelled like this to improve predictive accuracy. 
+
+In brms, the multivariate normal distribution is used by adding an identifier, here `group1`, to the description of random effects: `loga~(1|group1|ID), logh~(1|group1|ID)`. The identifier can be any name, and all variables with the same identifier are modelled as a joint multivariate normal. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 nlf(a~exp(loga)),
+                 nlf(h~exp(logh)),
+                 loga ~ (1|group1|ID),
+                 logh ~ (1|group1|ID),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,10), nlpar="loga"),
+               prior(normal(0,10), nlpar="logh"),
+               prior(exponential(0.1), nlpar="loga", class="sd", lb=0),
+               prior(exponential(0.1), nlpar="logh", class="sd", lb=0)
+)
+fit.3 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            iter     = 3000,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.3 = readRDS(file="fit_3.rds")
+expose_functions(fit.3, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.3)
+```
+
+Results are very close to the previous model. Here, we get an additional estimate of -0.70 for the correlation of attack rates and handling times. As above, posterior mean estimates for the parameters are extracted with `fitted()`. Additionally, the estimated MVN distribution from extracted mean vector `mu` and covariance matrix `Sigma` is visualized with contour lines.
+
+
+```{r}
+# compute individual parameters on logscale
+new.data = unique(df$ID)
+new.data = data.frame(ID = new.data,
+                      N0 = 1)
+a.pred = fitted(fit.3, nlpar="loga", newdata=new.data)
+h.pred = fitted(fit.3, nlpar="logh", newdata=new.data)
+new.data$loga = a.pred[, "Estimate"]
+new.data$logh = h.pred[, "Estimate"]
+# MVN parameters from summary table
+mu = c(0.24, -4.56)
+Sigma = matrix(c(0.74*0.74, 0.74*0.41*(-0.70),
+                 0.74*0.41*(-0.70), 0.41*0.41),
+               nrow = 2)
+# compute MVN density on x-y-grid
+x_range = seq(min(new.data$loga), max(new.data$loga), length.out = 200)
+y_range = seq(min(new.data$logh), max(new.data$logh), length.out = 200)
+grid = expand.grid(x=x_range, y=y_range)
+grid$z = mvtnorm::dmvnorm(grid, mean=mu, sigma=Sigma)
+# plotting
+p3 = ggplot(new.data, aes(loga, logh)) + geom_point(alpha = 0.5, size=2.5)
+p3 + geom_contour(data = grid, aes(x=x, y=y, z=z), alpha=0.5)
+```
+
+
+## Fixed and random effects 
+
+While the previous model acknowledged the correlation between attack rates and handling times, it did not include body size (a likely driver of this correlation) as an explicit predictor. Since body size was measured for each predator individual in this dataset, we can use it as a predictor in a linear mixed model for attack rates and handling times. These models 
+
+$$loga_i = \mu_a + b_a\cdot\text{Size}_i+\delta_{a,i}$$
+$$logh_i = \mu_h + b_h\cdot\text{Size}_i+\delta_{h,i}$$
+now include both fixed effects parameters (intercept $\mu_a$ & slope $b_a$ with size) and random effects $\delta_{a,i}$ (analogous for $h$). Here, random effects describe the the deviation from the perfect linear relationship predicted by size for each predator ID $i$. Again, we model these with a multivariate normal distribution, where the average deviation is assumed to be 0 
+$$\begin{pmatrix} \delta_{a,i} \\ \delta_{h,i}  \end{pmatrix}\sim\text{MVN}\left(0,\Sigma\right)$$
+In brms, this is easily coded by just adding the fixed effects predictor `Size` to the formulas `loga~Size+(1|group1|ID), logh~Size+(1|group1|ID)`. Alternatively, we use `scale(Size)` as predictor: for this mean-centered version intercepts $\mu_a,\mu_h$ describe parameter values for a size predator of mean body size, then. Priors as previously defined for `nlpar="loga"` and `nlpar="logh"` now set priors for both intercepts and slopes. New priors for the slopes are set by specifying `coef="scaleSize"` in a new line.
+
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 nlf(a~exp(loga)),
+                 nlf(h~exp(logh)),
+                 loga ~ scale(Size) + (1|group1|ID),
+                 logh ~ scale(Size) + (1|group1|ID),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,10), nlpar="loga"),
+               prior(normal(0,10), nlpar="logh"),
+               prior(normal(0,1), nlpar="loga", coef="scaleSize"),
+               prior(normal(0,1), nlpar="logh", coef="scaleSize"),
+               prior(exponential(0.1), nlpar="loga", class="sd", lb=0),
+               prior(exponential(0.1), nlpar="logh", class="sd", lb=0)
+)
+fit.4 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            iter     = 3000,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.4 = readRDS(file="fit_4.rds")
+expose_functions(fit.4, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.4)
+```
+
+The fixed effects model parameters (linear model for `loga` and `logh`) are found in the regression table, while standard deviation and correlation for the random effects are found the the multilevel table. Note that there is still a negative correlation -0.56 in the random effects, but it is not as strong as the previous -0.70. Here, some of the variation in individual predators' parameters is explained by `Size` now. That the correlation in the random effects (which now describe deviations from the linear model) does not disappear completely, could suggest that additional traits other than size drive the relationship between attack rate and handling time.  
+
+As before, the individual-level attack rates and handling times are not displayed in the summary, but can be computed with `fitted()`. We can plot them together with the linear model predictions for `Size` using `conditional_effects()`, either on logscale with `nlpar=loga` or on original scale `nlpar=a`.
+
+```{r}
+#| warning: false
+new.data = unique(df[, c("ID", "Size")])
+new.data$N0 = 1
+a.pred = fitted(fit.4, nlpar="a", newdata=new.data)
+h.pred = fitted(fit.4, nlpar="h", newdata=new.data)
+new.data$a = a.pred[, "Estimate"]
+new.data$h = h.pred[, "Estimate"]
+p1 = plot(conditional_effects(fit.4,
+                              nlpar="a",
+                              effects="Size"),
+          plot=FALSE)
+p1 = p1[[1]] +
+  geom_point(aes(x=Size, y=a),
+             alpha = 0.5, size=1.5,
+             inherit.aes = FALSE,
+             data = new.data)
+p2 = plot(conditional_effects(fit.4,
+                              nlpar="h",
+                              effects="Size"),
+          plot=FALSE)
+p2 = p2[[1]] +
+  geom_point(aes(x=Size, y=h),
+             alpha = 0.5, size=1.5,
+             inherit.aes = FALSE,
+             data = new.data)
+plot_grid(p1, p2, ncol = 2)
+```
+

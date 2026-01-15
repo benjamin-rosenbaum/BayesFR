@@ -1,0 +1,353 @@
+---
+title: "Categorical predictors: Predator and prey size classes"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3   
+    toc-title: "Contents" 
+    toc-float: true
+    toc-location: left
+---
+
+brms allows to make model parameters depend on predictors with classical formula notation. To estimate the effect of a continuous variable `x` (e.g. temperature or body mass) on attack rate, we simply specify `a~x` in the model formula. Then, the model does not estimate an overall attack rate, but an intercept (attack rate for `x=0`) and a slope (attack rate increase with one unit of `x`).
+
+If `x` is a factor, i.e. a categorical predictor with multiple levels, we specify `a~x` to estimate attack rates for every factor level. Note that this is by default modeled with **dummy-coding**, where one parameter is an "intercept" for the reference level and remaining parameters describe level differences. With `a~0+x` we can switch to **effects-coding**, where the model parameters are the actual, level-specific attack rates.
+
+Model formulas follow standard rules for multiple predictors and interactions, e.g. `a~x+y`, `a~x*y` etc.
+
+As an example, we use a dataset from [Cuthbert et al. (2020)](https://doi.org/10.1002/ece3.6332) downloaded from [Dryad](https://doi.org/10.5061/dryad.7m0cfxppt). It contains data from two fish predators feeding on tilapia. Predators and the prey were both categorized into three size classes, each. Feeding trials lasted 1 hour without prey replacement, so we use a dynamical prediction model.
+
+We test how predator and prey size classes shape the type 2 functional response of the bluegill predator (Lepomis macrochirus).
+
+```{r}
+#| warning: false
+rm(list=ls())
+library(BayesFR)
+
+data(df_Cuthbert_et_al_2020_ECOL_EVOL)
+df = subset(df_Cuthbert_et_al_2020_ECOL_EVOL, Predator=="Lepomis macrochirus")
+head(df)
+ggplot(aes(N0,NE, color=PredSize), data=df) +
+  geom_jitter(alpha=0.5, width=0.75, height=0, size=2.5)
+```
+
+## Null model
+
+We start with a null model, assuming attack rates and handling times are constant across all size classes. In the model formula, we just specify an intercept for both parameters `a+h~1`, short for `a~1, h~1` as we did before. Subsequently, we will test if other models such as `a~PredSize, h~PredSize` provide a better model fit than the null model.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a+h ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+summary(fit.1)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.1 = readRDS(file="fit_int.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.1)
+```
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1),
+     points = TRUE,
+     point_args = list(alpha=0.5, width=0.5, size=2.5))
+```
+
+## Predator Size
+
+**Our first hypothesis is that predator size affects both attack rates (increase) and handling times (decrease).** We specify `a ~ 0+PredSize` and `h ~ 0+PredSize`, or short: `a+h ~ 0+PredSize`, using effects-coding instead of dummy-coding. This choice also affects the prior definition. With effects-coding, parameters are level-specific attack rates and handling times, for which we  specify non-negative prior distributions. If we had used dummy-coding, parameters were intercept (reference level) and level differences, where differences can be positive or negative.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a+h ~ 0 + PredSize,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+fit.2 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.2, vectorize=TRUE)
+summary(fit.2)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.2 = readRDS("fit_pred.rds")
+expose_functions(fit.2, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.2)
+```
+
+The model estimates three attack rates and three handling times. First, we look at the model fit. By specifying an "interaction" `effects="N0:PredSize"`, the `conditional_effects()` function plots model fits for all three levels of predator size. 
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.2,
+                         effects="N0:PredSize"),
+     points = TRUE,
+     point_args = list(alpha=0.5, width=0.5, size=2.5))
+```
+
+Alternatively, ggplot can be used to plot the model fits separately:
+
+```{r}
+#| warning: false
+p = plot(conditional_effects(fit.2,
+                             effects="N0:PredSize"),
+         points = TRUE,
+         point_args = list(alpha=0.5, width=0.5, size=1.5),
+         plot = FALSE)
+p[[1]] + facet_wrap(~PredSize)
+```
+
+The plots revealed that model predictions differ between size classes, but we need formal criterion to quantify if `a+h ~ 0+PredSize` fits the data better than `a+h ~ 1`. We perform a model comparison with the  [loo-criterion](https://cran.r-project.org/web/packages/loo/vignettes/loo2-example.html). There is a substantial relative difference between the pred-size-model and the null model, which is about three times the associated standard error (uncertainty), and we safely conclude that the **pred-size-model performs better**.
+
+```{r}
+#| eval: false
+LOO(fit.1, fit.2)
+```
+
+```{r}
+#| echo: false
+#| warning: FALSE
+loo_compare(LOO(fit.1), LOO(fit.2))
+```
+
+Additionally, R2 gives us a rough idea about the improvement. 
+
+```{r}
+bayes_R2(fit.1)
+bayes_R2(fit.2)
+```
+
+If we want to investigate the effect of predator size further, we can plot and compare estimated attack rates and handling times. `conditional_effects()` also plots model parameters (``nlpar=...``) against predictor values (``effects=...``), here with their mean and 95% credible intervals:
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.2,
+                         effects="PredSize",
+                         nlpar="a"))
+plot(conditional_effects(fit.2,
+                         effects="PredSize",
+                         nlpar="h"))
+```
+
+It is important to know that an overlap in credible intervals does not necessarily mean that differences are not significant. Posterior MCMC samples of parameters are not independent and can be correlated. Properly calculating posterior probabilities reveals, e.g., $P\left( a_\text{large} >  a_\text{small} \right)=0.97$ despite the overlap.
+
+```{r}
+hypothesis(fit.2, "a_PredSizelarge > a_PredSizesmall")
+hypothesis(fit.2, "h_PredSizelarge < h_PredSizesmall")
+```
+
+## Predator and prey size: additive model
+
+The experiments also included three size classes for prey, and we test a **second hypothesis: attack rates do not depend on prey size (it's a predator trait), but handling times depend on predator-prey size ratio**, i.e. on predator and prey size. This translates to a model for attack rates as above `a~0+PredSize`, and handling times could, for example, be modeled with an additive effect `h~PredSize+PreySize`. 
+
+In the functional response context, this additive model comes with two problems. First, we cannot use effects-coding and **must use dummy-coding** (there are 9 pred-prey size combinations, but only 5 parameters: 1 reference level intercept, 2 pred-size effects, 2 prey-size effects). This makes it impossible to specify priors that guarantee a non-negative handling time. Second, the additive model assumes effects from both predictors add up, while for rates, **effects are rather multiplicative**. 
+
+Both problems can be solved by a **log-link**. We define a new set of parameters `logh` (any name will to) that describe log of handling times, and specify a classical linear model `logh ~ PredSize+PreySize`. The model parameters `h` are defined by `h = exp(logh)`, and both this log-link and the linear model are added to the model formula. As priors for the `logh` parameters (intercepts and effects) we choose a weakly informative normal distribution without boundaries. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a ~ 0+PredSize,
+                 nlf(h ~ exp(logh)),
+                 logh ~ PredSize+PreySize,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1), nlpar="a", lb=0),
+               prior(normal(0,1), nlpar="logh")
+)
+fit.3 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.3, vectorize=TRUE)
+summary(fit.3)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.3 = readRDS("fit_predpprey.rds")
+expose_functions(fit.3, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.3)
+```
+
+This model has 3 predictors (N0, PredSize, PreySize), but `conditional_effects` only allows to specify 2-way interactions as `effects`. Additional predictors must be specified as `conditions` to plot all model fits. 
+
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.3,
+                         effects="N0:PredSize",
+                         conditions = make_conditions(fit.3, var=c("PreySize"))),
+     points=TRUE,
+     point_args=list(alpha=0.5, width=0.5, size=1.5))
+```
+
+Alternatively, switching `PredSize` and `PreySize` rearranges the curves.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.3,
+                         effects="N0:PreySize",
+                         conditions = make_conditions(fit.3, var=c("PredSize"))),
+     points=TRUE,
+     point_args=list(alpha=0.5, width=0.5, size=1.5))
+```
+
+To test the research question, we test if including prey size as a predictor for handling times improved the model. Model comparison indeed shows that the **new model performs better**, and it also has a higher amount of explained variation R2.
+
+```{r}
+#| eval: false
+LOO(fit.2, fit.3)
+```
+
+```{r}
+#| echo: false
+#| warning: FALSE
+loo_compare(LOO(fit.2), LOO(fit.3))
+```
+
+```{r}
+bayes_R2(fit.2)
+bayes_R2(fit.3)
+```
+
+When parameters are plotted against their predictors, attack rates `a~0+PredSize` show a pattern similar to the previous model fit.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.3,
+                         nlpar="a",
+                         effects="PredSize")
+)
+```
+
+Handling times `h`, however, now also vary between prey size. Note that effects are additive on log-scale and therefore multiplicative on linear-scale (**ratios between prey sizes are equal** across pred size).
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.3,
+                         nlpar="h",
+                         effects="PredSize:PreySize")
+)
+```
+
+Parameters `logh`, on the other hand, show the modeled linear pattern (**differences between prey sizes are equal** across pred size).
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.3,
+                         nlpar="logh",
+                         effects="PredSize:PreySize")
+)
+```
+
+While attack rates can be extracted directly from the model parameters `a_PredSizesmall, a_PredSizemedium, a_PredSizelarge`, this is not the case for handling times. Their values can be computed with the `fitted()` function by specifying all predictors (although handling time does not depend on `N0`, it must be specified for the function call and can be set to an arbitrary value here). 
+
+```{r}
+fitted(fit.3,
+       nlpar = "h",
+       newdata = data.frame(PredSize="large", PreySize="large", N0=1))
+```
+
+## Predator and prey size: interaction model
+
+While the previous model improved model performance, it did not yet fully answer the question if attack rates are independent of prey size, but handling times depend on both predator and prey size. Therefore, we test the prey dependence of attack rates. For handling times, we used an additive model before, but we could also fit a interaction model that estimates individual parameters for all 9 pred-prey-size combinations. 
+
+We here test a **full factorial model** for both attack rates and handling times `a+h ~ 0+PredSize:PreySize`. With the interaction, we switch from dummy-coding to effects-coding again, since all level-combinations get their own attack rate and own handling time. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a+h ~ 0 + PredSize:PreySize, 
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1),  nlpar="a", lb=0),
+               prior(exponential(1),  nlpar="h", lb=0)
+)
+fit.4 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.4, vectorize=TRUE)
+summary(fit.4)
+```
+
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.4 = readRDS("fit_predxprey.rds")
+expose_functions(fit.4, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.4)
+```
+
+```{r}
+#| eval: false
+LOO(fit.3, fit.4)
+```
+
+Model comparison shows that the **full interaction model does not improve model fit** over the previous model `a~0+PredSize`, `logh~PredSize+PreySize` which supports our research hypothesis: In this system, attack rates are predator traits, while there is a multiplicative effect of prey size and predator size on handling times (additive on logscale), but not an interaction effect.
+
+```{r}
+#| echo: false
+#| warning: FALSE
+loo_compare(LOO(fit.3), LOO(fit.4))
+```
+
+```{r}
+bayes_R2(fit.3)
+bayes_R2(fit.4)
+```
+
+

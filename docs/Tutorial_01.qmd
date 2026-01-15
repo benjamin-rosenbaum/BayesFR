@@ -1,0 +1,110 @@
+---
+title: "Minimal example: data with prey replacement"
+format: 
+  html:
+    self-contained: true
+---
+
+```{r}
+#| warning: false
+rm(list=ls())
+library(BayesFR)
+```
+
+We load a dataset which is included in this package. It is originally from Michalko and Pekar (2017) and was made available in the FoRAGE database (Uiterwaal et al. 2022). It contains experiments with a spider feeding on a pear psylla pest. All 
+experiments were run for 7 hours and prey abundance was kept constant by replacing eaten prey.
+
+```{r}
+data(df_Michalko_and_Pekar_2017_AM_NAT)
+df = subset(df_Michalko_and_Pekar_2017_AM_NAT, ID=="Figure 3c")
+head(df)
+ggplot(aes(N0,NE), data=df) +
+  geom_jitter(width=0.1, height=0.1, alpha=0.6, size=2.5) +
+  coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
+```
+
+We want to estimate a type 2 functional response, parameterized by attack rate $a$ and handling time $h$. Since there was no prey depletion, we can directly fit the per-capita feeding rate, multiplied by predator abundance $P$ and experimental duration $T$ to the observed data.
+
+$$ F(N) = \frac{aN}{1+ahN}PT$$
+Additional to this deterministic prediction model, we need to specify how we assume the observed data to be distributed around the model predictions, this defines the likelihood function. Observed data $N_E$ are non-negative integers and theoretically do not have an upper boundary (since eaten prey are constantly replaced). This makes the Poisson distribution an obvious choice:
+
+
+$$ N_E \sim \text{Poisson} \left( F\left(N_0\right) \right)$$
+A nonlinear prediction model for brms can be defined in `bf()` the with model formula as first argument, parameters in the next line, and specifying that it is a nonlinear model with `nl=TRUE`. Here, `a~1, h~1` just means that these parameters are not depending on other predictors, i.e. fitting these parameters as is.
+
+```{r}
+FR.formula = bf( NE ~ a*N0/(1.0+a*h*N0)*7,
+                 a~1, h~1, 
+                 nl = TRUE)
+```
+
+Other prediction models cannot be defined in just a single line of code. This package contains Stan code for them, which can be fed into brms. The following formulation is identical to the one above, with a function `Type2H_fix()` coded in `Type2H_fix_code` (which is used later in the brms call). A helpfile is available with `?Type2H_fix_code`. The function `Type2H_fix()` requires abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `a` and `h` as arguments, in that exact order. Here, fixed values are provided for `P0=1.0` and `Time=7.0`, but these can also be columns in the data.
+
+```{r}
+FR.formula = bf( NE ~ Type2H_fix(N0,1.0,7.0,a,h),
+                 a~1, h~1, 
+                 nl = TRUE)
+```
+
+Note that attack rates and handling time are estimated per capita and per unit of time. Here, by specifying experimental duration as `Time=7.0`, attack rates are per hour, and handling time is in hours. Alternatively, if parameters should be estimated in days, `Time=7.0/24.0` will do. Note that time should be expressed as real values and not as integers, otherwise brms will misinterpret `7/24` as an integer operation. 
+
+The parameters' units are important for the prior definition. Here, we just choose some weakly informative exponential distributions with a mean of 1, each. A prior is required for these non-negative parameters and a lower boundary must be specified with `lb=0`. If priors are not desired, I recommend using a normal distribution with a wide standard deviation. More information on priors is provided in the dedicated chapter. 
+
+```{r}
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+```
+
+```{r}
+#| echo: false
+#| output: false
+fit.1 = readRDS(file="fit1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+Finally, we run the model calling `brm()` with the model formula as the first argument. The Poisson distribution is specified in `family`, and it is necessary to use the identity-link to overwrite the default log-link (which is not required because model predictions are already positive). The model function `Type2H_fix` is provided by this package's `Type2H_fix_code` in `stanvars`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
+
+```{r}
+#| eval: false
+fit.1 = brm(FR.formula,
+            family   = poisson(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode = Type2H_fix_code, block = "functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+The summary table gives us some infos on the fitted model. In Bayesian statistics, we first have to check for **convergence** of the MCMC. Here, the `Rhat` column quantifies how well the chains have mixed, and a value <1.01 is aspired. 
+
+```{r}
+summary(fit.1)
+```
+
+Additionally, a traceplot of the chains is helpful. If the plots in the right column look like fuzzy caterpillars, everything is fine. 
+
+```{r}
+plot(fit.1)
+```
+
+Our model estimated an attack rate mean of 0.64 [1/hour], and a handling time mean of 0.70 [hour], as also shown in the histograms of the posterior distribution in the left column above. 
+
+Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1), points=TRUE)
+```
+
+The plot can be modified, for example using predictions starting in `N0=0`. Additionally, ggplot parameters can be specified in `point_args`. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1, 
+                         effects="N0", 
+                         int_conditions=data.frame(N0=seq(0,12,length.out=100))), 
+     points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2.5))
+```
+

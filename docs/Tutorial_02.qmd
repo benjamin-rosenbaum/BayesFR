@@ -1,0 +1,95 @@
+---
+title: "Minimal example: data without prey replacement"
+format: 
+  html:
+    self-contained: true
+---
+
+```{r}
+#| warning: false
+rm(list=ls())
+library(BayesFR)
+```
+
+We load a dataset which is included in this package. It is originally from Hossie 
+and Murray (2010) and was made available in the FoRAGE database (Uiterwaal et al. 
+2022). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
+
+```{r}
+data(df_Hossie_and_Murray_2010_OECOLOGIA)
+df = subset(df_Hossie_and_Murray_2010_OECOLOGIA, ID=="Figure 1e")
+head(df)
+ggplot(aes(N0,NE), data=df) +
+  geom_jitter(width=0.1, height=0.0, alpha=0.6, size=2.5) +
+  coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
+```
+
+We want to estimate a type 3 functional response, which has a density-dependent attack rate $a=bN$, and is parameterized with attack rate coeffient $b$ and handling time $h$. Since eaten prey were not replaced, we cannot directly fit the type 3 functional response 
+$$ F(N) = \frac{bN^2}{1+bhN^2}PT$$
+to the observed data. Instead, prey abundance is modeled dynamically by the differential equation 
+ $$ \frac{dN}{dt} = -\frac{bN^2}{1+bhN^2}P, \quad N(t=0)=N_0$$
+With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented.
+
+Then, we still need to define a likelihood function for model fitting. Observed numbers of eaten prey are integers bounded between $0$ and $N_0$, because the predator cannot eat more than the initial abundance. This makes the Binomial distribution 
+$$N_E\sim\text{Binomial}\left(n,\ p\right)$$ 
+with $n=N_0$ trials and individual prey probability of being eaten $p=\frac{N_0-N_T}{N_0}$ an obvious choice.
+
+The dynamical prediction model, defined by the function `Type3H_dyn()` coded in `Type3H_dyn_code`, computes number of eaten prey based on these arguments: abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `b` and `h`, in that exact order. We define the brms formula:
+```{r}
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,1.0,1.0,b,h)/N0,
+                 b~1, h~1,
+                 nl = TRUE)
+```
+For the Binomial distribution, the number of trials `N0` is specified, and the success probability must be computed by dividing predicted number of eaten `Type3H_dyn()` by number of trials `N0`. Here, we provided fixed values for `P0=1.0` and `Time=1.0` [day], which means parameters are also estimated in [day]. 
+
+As in the previous example, we choose some very weakly informative priors, the lower boundary `lb=0` is required to keep parameters non-negative.
+```{r}
+FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+```
+
+```{r}
+#| echo: false
+#| output: false
+fit.1 = readRDS(file="fit1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the indentity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1).  After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
+
+```{r}
+#| eval: false
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type3H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+We check the summary table and the traceplots for MCMC convergence (`Rhat` values <1.01 and good mixing of the chains):
+
+```{r}
+summary(fit.1)
+plot(fit.1)
+```
+
+Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1), points=TRUE)
+```
+
+The plot can be modified to show the sigmoidal shape of the type 3 FR at low abundances. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1, 
+                         effects="N0", 
+                         int_conditions=data.frame(N0=1:60)), 
+     points=TRUE, point_args=list(width=0.1, alpha=0.6, size=2.5))
+```

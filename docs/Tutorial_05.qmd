@@ -1,0 +1,544 @@
+---
+title: "Continuous predictors: Size and temperature gradients"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3   
+    toc-title: "Contents" 
+    toc-float: true
+    toc-location: left
+---
+
+This tutorial introduces continuous predictors for parameters, for example estimating how attack rates and handling times are affected by experimental temperature. As seen in the previous tutorial on factors, parameters can be made linearly dependent on a measured predictor `x` by replacing `a~1` with `a~x`, which then estimates an intercept and a slope. 
+
+While we could previously enforce positiveness of parameters by specifying boundaries and/or priors, this is not easily possible with continuous predictors. Instead, a **GLM-style** log-link can be introduced with a linear model on logscale `loga~x`, and the inverse-link `nlf(a~exp(loga))`. Linear model formulas follow standard rules for multiple predictors and interactions, e.g. `loga~x+y`, `loga~x*y` etc.
+
+Alternatively, a **mechanistic approach** can be used when an explicit, potentially nonlinear formula for the dependency of `a` on `x` is known from theory. A classical example is the metabolic theory of ecology (MTE) with body size and temperature scaling of biological rates. 
+
+While a GLM approach is more **phenomenological**, mechanistic approaches are **theory-driven**. Both approaches will be used here.
+
+As an example, we use a dataset from [Davidson et al. (2021)](https://doi.org/10.1111/1365-2435.13777) downloaded from [Dryad](https://doi.org/10.5061/dryad.j6q573nd4). It contains data from two dragonfly nymph species feeding on mosquito larvae. Experiments were performed on a temperature gradient (using a response surface design for temperature and prey density) and predator size was recorded. Feeding trials lasted 24 hours without prey replacement, so we use a dynamical prediction model. For *Erythemis simplicicollis*, we here estimate temperature effects while controlling for predator size.
+
+```{r}
+#| warning: false
+rm(list=ls())
+library(BayesFR)
+library(cowplot) # ggplot grids
+library(GGally)  # ggplot pairs
+
+df = subset(df_Davidson_et_al_2021_FUN_ECOL, Predator=="Erythemis simplicicollis")
+head(df)
+ggpairs(df, columns=c("N0","Temperature","HeadWidth"))
+ggplot(aes(N0,NE, color=Temperature), data=df) +
+  geom_jitter(alpha = 0.5, width=1, size=2.5) +
+  theme(legend.position = c(0.05, 0.95),   
+        legend.justification = c("left", "top"))
+```
+
+## One predictor: Size
+
+We start with a dynamical type 2 **null model** that does not include temperature, but following the original publication we model handling time depending on predator size. It can be of advantage to scale continuous predictors (to mean 0 and sd 1), either by generating a new column in the dataframe, or by just using `scale()` in the model formula. brms also takes care of re-scaling for model predictions etc after model fitting automatically. Attack rate `a` is independent of size and we specify a positive prior as before. For handling times, priors are specified on logscale for `logh` and do not need to be positive. 
+
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a ~ 1,
+                 logh ~ scale(HeadWidth),
+                 nlf(h ~ exp(logh)),
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(normal(0,2), nlpar="logh")
+)
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+summary(fit.1)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.1 = readRDS(file="fit_1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.1)
+```
+
+The model returns an intercept and a negative slope for `logh`, which are based on the scaled predictor. I.e., the intercept is log handling time for `scale(HeadWidth)=0`, which corresponds to the mean of original predictor `HeadWidth`, as seen in the conditional effects plot for `logh`. 
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         effects="HeadWidth",
+                         nlpar="logh"),
+     rug = TRUE)
+```
+
+Alternatively, estimates for handling time can be plotted on original scale.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         effects="HeadWidth",
+                         nlpar="h"),
+     rug = TRUE)
+```
+
+Estimates of handling time for a specific predator size are computed with the `fitted()` function, either on logscale or original scale. Note that the predictor `N0` has to specified, too, although handling time does not depend on it.
+
+```{r}
+#| warning: false
+fitted(fit.1, nlpar="logh", newdata=data.frame(HeadWidth=4.5, N0=1))
+fitted(fit.1, nlpar="h",    newdata=data.frame(HeadWidth=4.5, N0=1))
+```
+
+Finally, model predictions are plotted against the data. brms automatically chooses 3 levels for the predictor `HeadWidth`: its mean, mean+1sd, mean-1sd.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         effects="N0:HeadWidth"),
+     points = TRUE,
+     point_args = list(alpha = 0.5, width=1, size=2.5))
+```
+
+Alternatively, `HeadWidth` levels can be specified in `int_conditions`. For better visibility, `prob=0` supresses credible intervals.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         effects="N0:HeadWidth",
+                         int_conditions=data.frame(HeadWidth=c(3.0,3.5,4.0,4.5,5.0)),
+                         prob=0),
+     points = TRUE,
+     point_args = list(alpha = 0.5, width=1, size=2.5))
+```
+
+It is also possible to plot response surface of number of eaten prey against the 2 predictors `N0` and `HeadWidth`, here as a contour plot.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.1,
+                         effects="N0:HeadWidth",
+                         surface=TRUE,
+                         ndraws=100))
+```
+
+## Second predictor: Temperature
+
+We now include temperature, which is expected to have a unimodal response in attack rates (modelled with a **quadratic term**) and a negative effect on handling times (modelled additively). Here, both parameters are modelled GLM-style with a log-link.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 loga ~ scale(Temperature)+I(scale(Temperature)^2),
+                 logh ~ scale(HeadWidth)+scale(Temperature),
+                 nlf(a ~ exp(loga)),
+                 nlf(h ~ exp(logh)),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,2), nlpar="loga"),
+               prior(normal(0,2), nlpar="logh")
+)
+
+fit.2 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.2, vectorize=TRUE)
+summary(fit.2)
+```
+
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.2 = readRDS(file="fit_2.rds")
+expose_functions(fit.2, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.2)
+```
+
+We find a slightly negative quadratic effect of temperature on attack rate, but the CI includes 0 so we are not so sure about that. Plotting attack rates estimates below, we observe a rather negative than a unimodal response, which is also associated with a lot of uncertainty (credible intervals). The temperature effect on handling time is negative as expected. 
+
+
+```{r}
+#| eval: false
+#| warning: false
+plot(conditional_effects(fit.2,
+                         effects="Temperature",
+                         nlpar="a"),
+     rug = TRUE)
+```
+```{r}
+#| echo: false
+#| warning: false
+p = plot(conditional_effects(fit.2,
+                             effects="Temperature",
+                             nlpar="a"),
+         rug = TRUE, plot=FALSE)
+p[[1]] + coord_cartesian(ylim=c(0,20))
+```
+```{r}
+#| warning: false
+plot(conditional_effects(fit.2,
+                         effects="Temperature:HeadWidth",
+                         nlpar="h"),
+     rug = TRUE)
+```
+
+Testing the negative quadratic effect reveals a posterior probability $P(b_\text{quadratic}<0)=0.81$, only.
+
+```{r}
+hypothesis(fit.2, "loga_IscaleTemperatureE2<0")
+p = plot(hypothesis(fit.2, "loga_IscaleTemperatureE2<0"), plot=FALSE)
+p[[1]] + geom_vline(xintercept=0)
+```
+
+This means the data does not include enough evidence for a unimodal relationship of attack rate with temperature. The model provides a better fit than the previous null model (without temperature), though. Testing a model with a purely linear relationship for attack rate `loga~scale(Temperature)` is left as an exercise for the reader.
+
+```{r}
+#| eval: false
+LOO(fit.1, fit.2)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.1), LOO(fit.2))
+```
+
+```{r}
+bayes_R2(fit.1)
+bayes_R2(fit.2)
+```
+
+
+## Mechanistical model
+
+Previous models for the parameters were phenomenological and tested quite general question such as "*Is there a hump-shaped relationship between attack rate and temperature?*" and "*Does body size have a negative effect on handling time?*", using linear models on a logscale. However, if theory suggests an explicit formula describing the relationship between a rate and a predictor (but is subject to unknown scaling factors), we can directly fit this relationship with the functional response model.
+
+For attack rates, Davidson et al. (2021) used the following equation describing the predator's thermal performance 
+$$a = a_0 \left( T-T_\min \right) \left(T_\max-T \right)^{1/2}$$
+It is a unimodal curve with lower $T_\min=10.0$ and upper $T_\max=42.0$ thermal bounds, which were previously established experimentally. $a_0>0$ is the only free parameter.
+
+Handling time was modelled following the metabolic theory of ecology (Brown et al. 2004)
+$$h = e^{h_0}M^{h_1}e^{\frac{h_2}{k\left(T+273.15\right)}} $$
+where $k=8.62\cdot10^{-5}$ is the Boltzmann constant. Free parameters include $h_0$ (intercept), $h_1$ (allometric exponent), and $h_2$ (activation energy). Davidson et al. (2021) fixed the allometric exponent $h_1=-0.75$ (3/4 power law), but here we estimate this free parameter and see if we can retrieve this relationship.
+
+Note that we use `HeadWidth^3` as a proxy for body mass in the equation. For all model parameters appearing in `nlf(a~ )` and `nlf(h~ )`, we have to specify that they do not depend on other predictors: `a0+h0+h1+h2~1`.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 nlf(a ~ a0 * (Temperature-10.0) * sqrt(42.0-Temperature)),
+                 nlf(h ~ exp(h0) * HeadWidth^(3*h1) * exp(h2/(8.62*10^(-5))/(Temperature+273.15))),
+                 a0+h0+h1+h2 ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1),  nlpar="a0", lb=0),
+               prior(normal(0,10), nlpar="h0"),
+               prior(normal(0,2),  nlpar="h1"),
+               prior(normal(0,2),  nlpar="h2")
+)
+fit.3 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            control  = list(max_treedepth=12),
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.3, vectorize=TRUE)
+summary(fit.3)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.3 = readRDS(file="fit_3.rds")
+expose_functions(fit.3, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.3)
+```
+
+Comparing attack rate estimates to the previous GLM-style model, we observe how the current thermal performance model enforces a unimodal relationship between the upper and lower thermal limits. 
+
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.3,
+                              effects="Temperature",
+                              nlpar="a"),
+          plot=FALSE)
+p2 = plot(conditional_effects(fit.2,
+                              effects="Temperature",
+                              nlpar="a"),
+          plot=FALSE)
+p1 = p1[[1]] +
+  coord_cartesian(ylim=c(3,10)) +
+  ggtitle("Mechanistic")
+p2 = p2[[1]] +
+  coord_cartesian(ylim=c(3,10)) +
+  ggtitle("GLM")
+plot_grid(p1, p2, ncol = 2)
+```
+
+For handling time, the allometric scaling exponent is estimated very close to the 3/4 power law: -0.73 [-0.86,-0.61]. Temperature and bodymass scaling are similar to the GLM-style model, although estimates are smaller in the lower to medium temperature range. 
+
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.3,
+                              effects="Temperature:HeadWidth",
+                              nlpar="h"),
+          plot=FALSE)
+p2 = plot(conditional_effects(fit.2,
+                              effects="Temperature:HeadWidth",
+                              nlpar="h"),
+          plot=FALSE)
+p1 = p1[[1]] +
+  coord_cartesian(ylim=c(.01,.07)) + 
+  theme(legend.position = c(0.95, 0.95),  
+        legend.justification = c("right", "top")) +
+  ggtitle("Mechanistic")
+p2 = p2[[1]] +
+  coord_cartesian(ylim=c(.01,.07)) +
+  theme(legend.position = c(0.95, 0.95),  
+        legend.justification = c("right", "top")) +
+  ggtitle("GLM")
+plot_grid(p1, p2, ncol = 2)
+```
+
+The actual model predictions (number of eaten prey) show that the mechanistic model is a bit more restricted than the GLM-style model, which predicts a wider range of eaten prey at medium to high densities, due to the stronger temperature effect on handling time. Note that `HeadWidth` is not specified in `effects` and predictions are shown for mean size only, then.
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.3,
+                              effects="N0:Temperature",
+                              int_conditions=data.frame(N0=1:80)),
+          points = TRUE,
+          point_args = list(alpha = 0.5, width=1, size=2.5),
+          plot = FALSE)
+p2 = plot(conditional_effects(fit.2,
+                              effects="N0:Temperature",
+                              int_conditions=data.frame(N0=1:80)),
+          points = TRUE,
+          point_args = list(alpha = 0.5, width=1, size=2.5),
+          plot = FALSE)
+p1 = p1[[1]] +
+  theme(legend.position = c(0.05, 0.95),  
+        legend.justification = c("left", "top")) +
+  ggtitle("Mechanistic")
+p2 = p2[[1]] +
+  theme(legend.position = c(0.05, 0.95),  
+        legend.justification = c("left", "top")) +
+  ggtitle("GLM")
+plot_grid(p1, p2, ncol = 2)
+```
+
+LOO model comparison show a weak tendency towards the phenomenological model, but the difference to the mechanistic model is smaller than the standard error. It also explains a bit more of the observed variation (R2).
+
+```{r}
+#| eval: false
+LOO(fit.2, fit.3)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.2), LOO(fit.3))
+```
+
+```{r}
+bayes_R2(fit.2)
+bayes_R2(fit.3)
+```
+
+These models perform very similarly, and we can't infer any clear preference from the model fittings. Generally, I would recommend using mechanistical models whenever possible: They include more precise information about the (probably nonlinear) relationship between predictors and model variables, and potentially also previous experimental evidence, such as thermal limits, here.
+
+## Continuous and categorical predictors
+
+The models above were fitted for the predator *Erythemis* only, but the dataset includes a second predator species. We test whether the two predators are affected differently by temperature.
+```{r}
+df = df_Davidson_et_al_2021_FUN_ECOL
+
+ggplot(aes(N0,NE, color=Predator), data=df) +
+  geom_jitter(alpha = 0.5, width=2, size=2.5) + 
+  theme(legend.position = c(0.05, 0.95),  
+        legend.justification = c("left", "top")) 
+```
+
+For this example, we go back to the phenomenological model. Here we can conveniently use an interaction of the factor `Predator` with `Temperature`, but first we fit a **null model** (without `Predator` factor) on the full dataset:
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 loga ~ scale(Temperature) + I(scale(Temperature)^2),
+                 logh ~ scale(HeadWidth) + scale(Temperature),
+                 nlf(a ~ exp(loga)),
+                 nlf(h ~ exp(logh)),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,2),  nlpar="loga"),
+               prior(normal(0,2),  nlpar="logh")
+)
+fit.4 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.4, vectorize=TRUE)
+summary(fit.4)
+```
+
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.4 = readRDS(file="fit_4.rds")
+expose_functions(fit.4, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.4)
+```
+
+Then, the **full model** including an interaction of `Predator` with `Temperature`, i.e. every predator species is fitted with individual temperature effects. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 loga ~ (scale(Temperature)+I(scale(Temperature)^2))*Predator ,
+                 logh ~ scale(HeadWidth)+scale(Temperature)*Predator,
+                 nlf(a ~ exp(loga)),
+                 nlf(h ~ exp(logh)),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0,2),  nlpar="loga"),
+               prior(normal(0,2),  nlpar="logh")
+)
+fit.5 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.5, vectorize=TRUE)
+summary(fit.5)
+```
+
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.5 = readRDS(file="fit_5.rds")
+expose_functions(fit.5, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: true
+summary(fit.5)
+```
+
+The predators show some difference in their response to temperature, and *Erythemis* seems to be more sensitive (both attack rates and handling times). While the null model here predicts a unimodal response of attack rate, the full model predicts for *Erythemis* mostly a decrease in attack rates at high temperatures (as above, when fitting this species alone) and for *Pachydiplax* an increase with temperature. 
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.5,
+                              effects="Temperature:Predator",
+                              nlpar="a"), 
+          plot = FALSE)
+p2 = plot(conditional_effects(fit.4,
+                              effects="Temperature",
+                              nlpar="a"),
+          plot = FALSE)
+p1 = p1[[1]] +
+  coord_cartesian(ylim=c(0,10)) + 
+  theme(legend.position = c(0.95, 0.95),  
+        legend.justification = c("right", "top")) +
+  ggtitle("Predator model")
+p2 = p2[[1]] +
+  coord_cartesian(ylim=c(0,10)) + 
+  ggtitle("Null model")
+plot_grid(p1, p2, ncol = 2)
+```
+
+
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.5,
+                              effects="Temperature:Predator",
+                              nlpar="h"), 
+          plot = FALSE)
+p2 = plot(conditional_effects(fit.4,
+                              effects="Temperature",
+                              nlpar="h"),
+          plot = FALSE)
+p1 = p1[[1]] +
+  coord_cartesian(ylim=c(0.01,0.06)) + 
+  theme(legend.position = c(0.95, 0.95),  
+        legend.justification = c("right", "top")) +
+  ggtitle("Predator model")
+p2 = p2[[1]] +
+  coord_cartesian(ylim=c(0.01,0.06)) + 
+  ggtitle("Null model")
+plot_grid(p1, p2, ncol = 2)
+```
+
+The stronger temperature effect for *Erythemis* is also observed in model predictions for eaten prey.
+
+```{r}
+#| warning: false
+plot(conditional_effects(fit.5,
+                         effects="N0:Temperature",
+                         int_conditions=data.frame(N0=1:80),
+                         conditions = make_conditions(fit.5, var=c("Predator"))),
+     points = TRUE,
+     point_args = list(alpha = 0.5, width=1, size=2.5))
+```
+
+Model comparison shows a weak tendency towards the full model, difference in model performance is larger than 1SE (but not larger than 2SE).
+
+```{r}
+#| eval: false
+LOO(fit.4, fit.5)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.4), LOO(fit.5))
+```
+
+```{r}
+bayes_R2(fit.4)
+bayes_R2(fit.5)
+```
+
+
