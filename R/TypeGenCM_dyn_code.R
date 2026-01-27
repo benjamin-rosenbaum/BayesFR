@@ -25,7 +25,7 @@
 
 #' @return Number of eaten prey
 #' @export
-TypeCM_dyn_code = "
+TypeGenCM_dyn_code = "
 // ODE function
 vector TypeGenCMODE(real t, vector y, vector theta){
   vector[1] dydt;

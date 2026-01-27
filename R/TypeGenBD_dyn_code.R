@@ -25,7 +25,7 @@
 
 #' @return Number of eaten prey
 #' @export
-TypeBD_dyn_code = "
+TypeGenBD_dyn_code = "
 // ODE function
 vector TypeGenBDODE(real t, vector y, vector theta){
   vector[1] dydt;
