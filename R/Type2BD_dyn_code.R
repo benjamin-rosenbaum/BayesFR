@@ -20,7 +20,7 @@
 #' @export
 Type2BD_dyn_code = "
 // prediction
-real Type2BD_dyn(real N, real P, real Time, real a, real h){
+real Type2BD_dyn(real N, real P, real Time, real a, real h, real c){
   real a_new = a/(1.0+c*(P-1.0));
   return(N-lambert_w0(a_new*h*N*exp(a_new*(h*N-P*Time)))/(a_new*h));
 }

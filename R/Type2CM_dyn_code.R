@@ -20,7 +20,7 @@
 #' @export
 Type2CM_dyn_code = "
 // prediction
-real Type2CM_dyn(real N, real P, real Time, real a, real h){
+real Type2CM_dyn(real N, real P, real Time, real a, real h, real c){
   real a_new = a/(1.0+c*(P-1.0));
   real h_new = h*(1.0+c*(P-1.0));
   return(N-lambert_w0(a_new*h_new*N*exp(a_new*(h_new*N-P*Time)))/(a_new*h_new));
