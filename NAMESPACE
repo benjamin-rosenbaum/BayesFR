@@ -2,6 +2,8 @@
 
 export(Type1_dyn_code)
 export(Type1_fix_code)
+export(Type2BD_dyn_code)
+export(Type2CM_dyn_code)
 export(Type2H_dyn_code)
 export(Type2H_fix_code)
 export(Type3GenH_dyn_code)
