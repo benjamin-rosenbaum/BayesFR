@@ -1,0 +1,319 @@
+---
+title: "Predator interference"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3   
+    toc-title: "Contents" 
+    toc-float: true
+    toc-location: left
+---
+
+All previous models included predator abundance explicitly. E.g. in the type 2 functional response model, the realized **total feeding rate**
+$$F_\text{total}(N,P)=\frac{aN}{1+ahN}P$$ consists of the **per-capita feeding rate** 
+$F_\text{p.c.}(N)=\frac{aN}{1+ahN}$, and total feeding is **proportionial** to predator abundance $P$. This proportionality, however, assumes that predator individuals do not interfere with each other and that an individual's attack rate $a$ and handling time $h$ are independent of predator abundance $P$.
+
+Here, we will include models that assume predator interference affects the per-capita feeding rate by decreasing attack rates and / or increasing handling times. 
+
+We use a dataset from [Papanikolaou et al. (2020)](https://doi.org/10.1002/ece3.7137) downloaded from [Dryad](https://doi.org/10.5061/dryad.2ngf1vhmj). Mirid nymphs (here only 1st instar data used) feed on Lepidoptera eggs, and experiments were performed with varying predator abundance of 1, 2, 3, or 4 individuals. Eaten eggs were not replaced. The total number of eaten eggs seems to increase with predator abundance (to no surprise!), but we are interested if per capita feeding is affected by predator interference. Note that models will be fitted to the data on the observed scale (total number of eaten eggs, integers), and not the fractional numbers of the per capita feeding. 
+
+```{r}
+#| warning: false
+library("BayesFR")
+library("ggplot2")
+library("cowplot")
+
+df = df_Papanikolaou_et_al_2021_ECOL_EVOL
+df = subset(df, ID=="1st instar")
+
+p1 = ggplot(df, aes(N0,NE, col=factor(P0))) +
+  geom_jitter(alpha=0.5, width=0.5, height=0, size=1.5) +
+  labs(color="P0") +
+  scale_color_manual(values = rev(scales::hue_pal()(4))) +
+  theme(legend.position = c(0.05, 0.95),
+        legend.justification = c("left", "top")) +
+  ggtitle("Total feeding")
+p2 = ggplot(df, aes(N0,NE/P0, col=factor(P0))) +
+  geom_jitter(alpha=0.5, width=0.5, height=0, size=1.5) +
+  scale_color_manual(values = rev(scales::hue_pal()(4))) +
+  theme(legend.position = "none") +
+  ggtitle("Per capita feeding")
+
+plot_grid(p1, p2, ncol = 2)
+```
+
+
+## Models affecting attack rates
+
+1. The **Beddington-DeAngelis model**
+$$F(N,P)=\frac{aN}{1+c(P-1)+ahN}P$$ 
+includes predator abundance in the per-capita feeding part as well, with an interference coeffient $c\geq0$. The term $(P-1)$ makes the functional response collapse to a classical Holling type 2 for $P=1$ and decreases the per-capita feeding rate for $P>1$. Using 
+$$\tilde{a}(P)=\frac{a}{1+c(P-1)}$$
+the model can be rewritten as $F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$, which takes the form of a Holling type 2 with a predator-dependent attack rate $\tilde{a}(P)$. Hence, attack rates decline with predator abundance as a **rational function**, while handling time remains unaffected.
+
+2. The **Hassell-Varley model**
+$$F(N,P)=\frac{aN}{P^c+ahN}P$$ 
+takes a different form, but also collapses to a Holling type 2 for $P=1$. Similarly, it can be re-parameterized using 
+$$\tilde{a}(P)=aP^{-c}$$
+and rewritten as $F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$, again. Attack rates now decline with predator abundance as a **power function**, while handling time remains unaffected.
+
+3. Alternatively, as presented in the tutorial on continuous predictors, it is easy to make any model parameter (linearly) dependent on other observed variables. In brms, just by specifying `a~P`, a **linear model** with intercept and slope is imposed on the attack rates. Additionally, a log-link can be used to ensure nonnegative attack rates with `nlf(a~exp(loga)), loga~P`. Here, the Holling type 2
+$$F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$$ 
+uses a linear model on logscale (centering in $P=1$ is optional, but can be enforced with `loga~I(P-1)`):
+$$\log\tilde{a}=\log a +c(P-1)$$
+which is equivalent to attack rates depending on predator abundance as an **exponential function**
+$$\tilde{a}= a e^{c(P-1)}$$
+
+For experiments without prey replacement, the reduction to the Holling type 2 (with additional parameter dependencies) for all three models also means that we can use an analytical solution for 
+$$\frac{dN}{dt}=-\frac{\tilde{a}N}{1+\tilde{a}hN}P$$
+using Rogers' Random Predator equation.
+
+
+### Holling 2 fit
+
+We start by fitting the classical Holling type 2 as a **null model**. It already includes predator abundance `P0` as a predictor. In the previous tutorials, this was usually constant across experiments, now it is a treatment variable.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 a+h~1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0))
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+summary(fit.1)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.1 = readRDS(file="fit_1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.1)
+```
+
+By specifying `effects="N0:P0` in `conditional_effects()`, predicted number of total eaten prey is plotted for several predator abundance levels. It would be very convenient if we could plot the same (data & predictions) divided by `P0` to visualize per capita feeding as well, but this is not possible with `conditional_effects()`. Alternatively, we compute predictions `NE` manually with `fitted()` and plot `NE/P0`. We will use this for all subsequent models, too, so we wrap these two plots into a function to be called later on.
+
+```{r}
+#| warning: false
+plot_fit = function(fit, df){
+  # total feeding with conditional_effects() as usual
+  p1 = plot(conditional_effects(fit,
+                                effects="N0:P0",
+                                int_conditions=data.frame(P0=1:4)),
+            points=FALSE, plot=FALSE)
+  p1 = p1[[1]] +
+    geom_jitter(aes(N0,NE, col=as.factor(P0)),
+                inherit.aes = FALSE,
+                data=df,
+                alpha=0.5, width=0.8, height=0, size=1.5) +
+    theme(legend.position = c(0.05, 0.95),
+          legend.justification = c("left", "top")) +
+    ggtitle("Total feeding")
+  
+  # can't just divide the conditional_effects object by P0 to get per capita
+  # recreate these predictions (NE) manually with fitted() and then plot NE/P0
+  Nmax = max(df$N0)
+  newdata = data.frame(N0 = rep(1:Nmax,4),
+                       P0 = c(rep(1,Nmax), rep(2,Nmax), rep(3,Nmax), rep(4,Nmax)))
+  NE.pred = fitted(fit, newdata = newdata)
+  newdata$NE = NE.pred[, 1]
+  
+  p2 = ggplot(df, aes(N0,NE/P0, col=factor(P0))) +
+    geom_jitter(alpha=0.5, width=0.5, height=0, size=1.5) +
+    geom_line(data=newdata, linewidth=1) +
+    scale_color_manual(values = rev(scales::hue_pal()(4))) +
+    theme(legend.position = "none") +
+    ggtitle("Per capita feeding")
+  
+  plot_grid(p1, p2, ncol = 2)
+}
+
+plot_fit(fit.1, df)
+```
+
+The per capita plot might surprise at first. Per capita **feeding rate** $F_\text{p.c.}(N)=\frac{aN}{1+ahN}$ is independent of predator abundance for the Holling type 2, so why is per capita **realized feeding** (number of eaten prey per predator) different? Here, realized per capita feeding is lower for higher predator abundances not because of interference, but because of the dynamical nature of the feeding process without prey replacement. Many predators consume more prey than fewer predators, which means prey density $N$ and also $F_\text{p.c.}(N)$ decline faster when there are more predators, leading to a reduced realized per capita feeding. For high prey availability however, per capita feeding remains unchanged, since feeding rates are limited by handling time and not by prey availability.
+
+Fitting alternative models that include predator interference  will elucidate if predator abundance reduces realized per capita feeding more than predicted by this Holling 2 null model.
+
+### Beddington-DeAngelis fit
+
+While this package contains a direct implementation of the model that can be used with `Type2BD_dyn(N0,P0,1.0,a,h,c)`, we here use the equivalent formulation of a Holling type 2 model with an explicit, predator abundance dependent attack rate. This has the (only) advantage that we can conveniently use `conditional_effects()` to plot and `fitted()` to predict realized attack rates. Here, parameter `a0` denotes a single predator's attack rate at `P0=1`. 
+
+```{r}
+#| eval: false
+# Type2BD_dyn(N0,P0,1.0,a,h,c)/N0, a+h+c~1
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 nlf(a~a0/(1.0+c*(P0-1.0))),
+                 a0+h+c~1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a0", lb=0),
+               prior(exponential(1.0), nlpar="c", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0))
+fit.2= brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.2, vectorize=TRUE)
+summary(fit.2)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.2 = readRDS(file="fit_2.rds")
+expose_functions(fit.2, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.2)
+```
+
+Plotting predictions against data reveals that differences in per capita feeding between predator abundance levels is visibly larger than in the Holling type 2 model, caused by a predator interference coefficient $c>0$.
+
+```{r}
+#| warning: false
+plot_fit(fit.2, df)
+```
+
+Realized attack rates are plotted against predator abundance and show their decline as a rational function $\tilde{a}(P)=\frac{a}{1+c(P-1)}$. Note that parameter `a0` corresponds to the "intercept" in `P0=1`. 
+
+```{r}
+#| warning: false
+p3 = plot(conditional_effects(fit.2,
+                              effects="P0",
+                              nlpar="a"),
+          plot = FALSE)
+p3[[1]] + coord_cartesian(ylim=c(0.5,2))
+```
+
+### Hassell-Varley fit
+
+This section works analogously to the previous one. This model is also implemented as `Type2HV_dyn(N0,P0,1.0,a,h,c)`, but here we use an equivalent formulation with Holling type 2 and corresponding interference model for attack rates.
+
+```{r}
+#| eval: false
+# Type2HV_dyn(N0,P0,1.0,a,h,c)/N0, a+h+c~1
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 nlf(a~a0*P0^(-c)),
+                 a0+h+c~1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a0", lb=0),
+               prior(exponential(1.0), nlpar="c", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0))
+fit.3= brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.3, vectorize=TRUE)
+summary(fit.3)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.3 = readRDS(file="fit_3.rds")
+expose_functions(fit.3, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.3)
+```
+
+Note that parameters `a0` and `h` can be directly compared between models, while this is not true for interference parameter `c`. Interference parameters of a rational function (above) and a power function (here) are not the same.
+
+Plotting reveals a similar pattern as Beddington-DeAngelis model, with a stronger effect of predator abundance on realized per capita feeding than in the Holling type 2 null model.
+
+```{r}
+#| warning: false
+plot_fit(fit.3, df)
+```
+
+Also, the power law relationship of $\tilde{a}(P)=aP^{-c}$ shows a similar decline as the previous model. Again, parameter `a0` is the "intercept" in `P0=1`.
+
+```{r}
+#| warning: false
+p3 = plot(conditional_effects(fit.3,
+                              effects="P0",
+                              nlpar="a"),
+          plot = FALSE)
+p3[[1]] + coord_cartesian(ylim=c(0.5,2))
+```
+
+### GLM-style fit
+
+While the previous two models used specific nonlinear relationships of attack rates with predator abundance (rational function and power function), we here introduce a linear modeling framework with a log-link to keep attack rates positive. `alog~P0` specifies a linear model with intercept & slope, while `alog~I(P0-1)` centers the model in `P0=1`. Here, the interference effect is identified as the model's slope, which can be positive or negative. This GLM-style formulation would make inclusion of potential additional fixed or random effects easy, e.g. `alog ~ I(P0-1.0) + predictor1 + (1|predictor2)` etc.
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 nlf(a~exp(alog)),
+                 alog~I(P0-1.0), # alternatively alog~P0 without centering in P0=1
+                 h~1,
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0.0, 1.0), nlpar="alog"),
+               prior(exponential(1.0), nlpar="h", lb=0))
+fit.4 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.4, vectorize=TRUE)
+summary(fit.4)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.4 = readRDS(file="fit_4.rds")
+expose_functions(fit.4, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.4)
+```
+
+Results look pretty similar to the other two interference models.
+
+```{r}
+#| warning: false
+plot_fit(fit.4, df)
+```
+
+While realized attack rates look similar, the slope in this exponential function $\tilde{a}= a e^{c(P-1)}$ is a bit less dynamic across the range of predator abundances than in the previous two models. Note that the "intercept" in `P0=1` is given as `exp(alog_Intercept)`.
+
+```{r}
+#| warning: false
+p3 = plot(conditional_effects(fit.4,
+                              effects="P0",
+                              nlpar="a"),
+          plot = FALSE)
+p3[[1]] + coord_cartesian(ylim=c(0.5,2))
+```
+
+### Comparison
+
+## Models affecting attack rates and handling times
