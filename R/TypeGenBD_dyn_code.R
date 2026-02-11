@@ -27,26 +27,24 @@
 #' @export
 TypeGenBD_dyn_code = "
 // ODE function
-vector TypeGenBDODE(real t, vector y, vector theta){
+vector TypeGenODE(real t, vector y, vector theta){
   vector[1] dydt;
-  real bNq = theta[1]*y[1]^theta[3];
   if(y[1]<1e-8){
     dydt[1] = 0.0;
   } else {
-    dydt[1] = -bNq*theta[4] / ( 1.0+theta[5]*(theta[4]-1.0) + bNq*theta[2] );
+    dydt[1] = -theta[1]*y[1]^theta[3]/(1.0+theta[1]*theta[2]*y[1]^theta[3])*theta[4];
   }
   return dydt;
 }
 // prediction
 real TypeGenBD_dyn(real N, real P, real Time, real b, real h, real q, real c){
   array[1] vector[1]  y;
-  vector[5] theta;
-  theta[1] = b;
+  vector[4] theta;
+  theta[1] = b/(1.0+c*(P-1.0));
   theta[2] = h;
   theta[3] = 1.0+q;
   theta[4] = P;
-  theta[5] = c;
-  y = ode_rk45(TypeGenBDODE, [N]', 0.0, {Time}, theta);
+  y = ode_rk45(TypeGenODE, [N]', 0.0, {Time}, theta);
   return(N-y[1][1]);
 }
 "

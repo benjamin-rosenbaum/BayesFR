@@ -10,9 +10,14 @@ format:
     toc-location: left
 ---
 
+<ol start="1">
+<li> 
 All previous models included predator abundance explicitly. E.g. in the type 2 functional response model, the realized **total feeding rate**
 $$F_\text{total}(N,P)=\frac{aN}{1+ahN}P$$ consists of the **per-capita feeding rate** 
-$F_\text{p.c.}(N)=\frac{aN}{1+ahN}$, and total feeding is **proportionial** to predator abundance $P$. This proportionality, however, assumes that predator individuals do not interfere with each other and that an individual's attack rate $a$ and handling time $h$ are independent of predator abundance $P$.
+$F_\text{capita}(N)=\frac{aN}{1+ahN}$, and total feeding is **proportionial** to predator abundance $P$. This proportionality, however, assumes that predator individuals do not interfere with each other and that an individual's attack rate $a$ and handling time $h$ are independent of predator abundance $P$.
+</li>
+</ol>
+
 
 Here, we will include models that assume predator interference affects the per-capita feeding rate by decreasing attack rates and / or increasing handling times. 
 
@@ -46,24 +51,30 @@ plot_grid(p1, p2, ncol = 2)
 
 ## Models affecting attack rates
 
-1. The **Beddington-DeAngelis model**
+<ol start="2">
+<li> 
+The **Beddington-DeAngelis model**
 $$F(N,P)=\frac{aN}{1+c(P-1)+ahN}P$$ 
 includes predator abundance in the per-capita feeding part as well, with an interference coeffient $c\geq0$. The term $(P-1)$ makes the functional response collapse to a classical Holling type 2 for $P=1$ and decreases the per-capita feeding rate for $P>1$. Using 
 $$\tilde{a}(P)=\frac{a}{1+c(P-1)}$$
 the model can be rewritten as $F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$, which takes the form of a Holling type 2 with a predator-dependent attack rate $\tilde{a}(P)$. Hence, attack rates decline with predator abundance as a **rational function**, while handling time remains unaffected.
-
-2. The **Hassell-Varley model**
+</li>
+<li>
+The **Hassell-Varley model**
 $$F(N,P)=\frac{aN}{P^c+ahN}P$$ 
 takes a different form, but also collapses to a Holling type 2 for $P=1$. Similarly, it can be re-parameterized using 
 $$\tilde{a}(P)=aP^{-c}$$
 and rewritten as $F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$, again. Attack rates now decline with predator abundance as a **power function**, while handling time remains unaffected.
-
-3. Alternatively, as presented in the tutorial on continuous predictors, it is easy to make any model parameter (linearly) dependent on other observed variables. In brms, just by specifying `a~P`, a **linear model** with intercept and slope is imposed on the attack rates. Additionally, a log-link can be used to ensure nonnegative attack rates with `nlf(a~exp(loga)), loga~P`. Here, the Holling type 2
+</li>
+<li>
+Alternatively, as presented in the tutorial on continuous predictors, it is easy to make any model parameter (linearly) dependent on other observed variables. In brms, just by specifying `a~P`, a **linear model** with intercept and slope is imposed on the attack rates. Additionally, a log-link can be used to ensure nonnegative attack rates with `nlf(a~exp(loga)), loga~P`. Here, the Holling type 2
 $$F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}hN}P$$ 
 uses a linear model on logscale (centering in $P=1$ is optional, but can be enforced with `loga~I(P-1)`):
 $$\log\tilde{a}=\log a +c(P-1)$$
 which is equivalent to attack rates depending on predator abundance as an **exponential function**
 $$\tilde{a}= a e^{c(P-1)}$$
+</li>
+</ol>
 
 For experiments without prey replacement, the reduction to the Holling type 2 (with additional parameter dependencies) for all three models also means that we can use an analytical solution for 
 $$\frac{dN}{dt}=-\frac{\tilde{a}N}{1+\tilde{a}hN}P$$
@@ -144,7 +155,7 @@ plot_fit = function(fit, df){
 plot_fit(fit.1, df)
 ```
 
-The per capita plot might surprise at first. Per capita **feeding rate** $F_\text{p.c.}(N)=\frac{aN}{1+ahN}$ is independent of predator abundance for the Holling type 2, so why is per capita **realized feeding** (number of eaten prey per predator) different? Here, realized per capita feeding is lower for higher predator abundances not because of interference, but because of the dynamical nature of the feeding process without prey replacement. Many predators consume more prey than fewer predators, which means prey density $N$ and also $F_\text{p.c.}(N)$ decline faster when there are more predators, leading to a reduced realized per capita feeding. For high prey availability however, per capita feeding remains unchanged, since feeding rates are limited by handling time and not by prey availability.
+The per capita plot might surprise at first. Per capita **feeding rate** $F_\text{capita}(N)=\frac{aN}{1+ahN}$ is independent of predator abundance for the Holling type 2, so why is per capita **realized feeding** (number of eaten prey per predator) different? Here, realized per capita feeding is lower for higher predator abundances not because of interference, but because of the dynamical nature of the feeding process without prey replacement. Many predators consume more prey than fewer predators, which means prey density $N$ and also $F_\text{capita}(N)$ decline faster when there are more predators, leading to a reduced realized per capita feeding. For high prey availability however, per capita feeding remains unchanged, since feeding rates are limited by handling time and not by prey availability.
 
 Fitting alternative models that include predator interference  will elucidate if predator abundance reduces realized per capita feeding more than predicted by this Holling 2 null model.
 
@@ -316,4 +327,210 @@ p3[[1]] + coord_cartesian(ylim=c(0.5,2))
 
 ### Comparison
 
+Interestingly, Holling type 2 has the best R2 value. However, in this non-linear and non-normal modeling framework, R2 has only limited explanatory power. It weighs all squared residuals equally and does not account for the binomial distribution's variance $Np(1-p)$ which increases with number of prey.
+
+```{r}
+bayes_R2(fit.1)
+bayes_R2(fit.2)
+bayes_R2(fit.3)
+bayes_R2(fit.4)
+```
+
+We use the information criterion instead, which reveals that all interference models perform substantially better than the Holling type 2 null model. The GLM-type model seems to perform best, although the difference between the three interference models is very thin. 
+
+```{r}
+#| eval: false
+LOO(fit.1, fit.2, fit.3, fit.4)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.1), LOO(fit.2), LOO(fit.3), LOO(fit.4))
+```
+
+
+
+
 ## Models affecting attack rates and handling times
+
+<ol start="5">
+<li>
+The **Crowley-Martin model**
+$$F(N,P)=\frac{aN}{(1+ahN)(1+c(P-1))}P$$ 
+again includes predator abundance with a single interference coefficient  $c\geq0$ and also collapses to a classical Holling type 2 for $P=1$. Using
+$$\tilde{a}(P)=\frac{a}{1+c(P-1)}$$
+$$\tilde{h}(P)=h(1+c(P-1))$$
+the model can be rewritten as $F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}\tilde{h}N}P$ (Holling type 2). Here, interference reduces attack rates by the factor $(1+c(P-1))$ just as in the Beddington-DeAngelis model above, while now **interference also increases handling times by the same factor**. This means attack rates and also maximum feeding rates $f_\max=1/h$ decrease with predator abundance by the same factor, e.g. both are reduced by 50% at a certain predator abundance. Note that, theoretically, we could make the model more flexible if needed by allowing individual interference parameters $c_a$ and $c_h$ for attack rates and handling times, respectively. 
+</li>
+<li>
+Alternatively, we can make both model parameters $a$ and $h$ in the Holling type 2
+$$F(N,P)=\frac{\tilde{a}N}{1+\tilde{a}\tilde{h}N}P$$
+(linearly) dependent on predator abundance. As previously, we impose a log-link on the linear relationship
+$$ \log\tilde{a}=\log a+c_a(P-1)$$
+and now also on 
+$$ \log\tilde{h}=\log h+c_h(P-1)$$
+The log-link ensures positive attack rates and handling times, without restrictions on coefficients $c_a,c_h$. In brms, the notation `nlf(a~exp(loga)), loga~I(P-1)` (same for `h`) is used and could be easily extended to additional fixed or random effects.  
+</li>
+</ol>
+
+### Crowley-Martin fit
+
+This package includes an implementation of the model `Type2CM_dyn(N0,P0,1.0,a,h,c)/N0`, but we use the equivalent formulation with the Holling type 2 and predator-dependent attack rates and handling times. Note that here both models `a~...` and `h~...` share the interference parameter `c` as defined in the original model formulation.
+
+```{r}
+#| eval: false
+# Type2CM_dyn(N0,P0,1.0,a,h,c)/N0, a+h+c~1
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 nlf(a~a0/(1.0+c*(P0-1.0))),
+                 nlf(h~h0*(1.0+c*(P0-1.0))),
+                 a0+h0+c~1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a0", lb=0),
+               prior(exponential(1.0), nlpar="h0", lb=0),
+               prior(exponential(1.0), nlpar="c", lb=0))
+fit.5 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.5, vectorize=TRUE)
+summary(fit.5)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.5 = readRDS(file="fit_5.rds")
+expose_functions(fit.5, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.5)
+```
+
+The interference parameter `c` now affects attack rates and handling times. Per capita feeding now has `P0`-specific asymptotes for large `N0`, while previous models above eventually converge to a joint asymptote for large `N0`. 
+
+```{r}
+#| warning: false
+plot_fit(fit.5, df)
+```
+
+The relative effects of predator interference on `a` and `h` are linked due to a joint parameter `c`. Here, relative decrease in `a` for a specific predator level, e.g. factor 0.5 = 50%, means an increase in `h` by factor 2 = 100%.
+
+```{r}
+#| warning: false
+p3 = plot(conditional_effects(fit.5,
+                              effects="P0",
+                              nlpar="a"),
+          plot = FALSE)
+p4 = plot(conditional_effects(fit.5,
+                              effects="P0",
+                              nlpar="h"),
+          plot = FALSE)
+p3 = p3[[1]] + coord_cartesian(ylim=c(0.5,2))
+p4 = p4[[1]] + coord_cartesian(ylim=c(0.16,0.26))
+plot_grid(p3, p4, ncol=2)
+```
+
+### GLM-style fit
+
+These classical models allow only an isolated effect on attack rate (Beddington-DeAngelis & Hassell-Varley), or linked effects on attack rates and handling time (Crowley-Martin). brms makes a more flexible modeling very acessible, by either providing a specific formula via `nlf(a~...)` and/or `nlf(h~...)`, or by a (generalized) linear modeling framework, e.g. `a~predictor1+(1|predictor2)` etc. Here, we use a linear model with predictor `P0` centered in `P0=1` and a log-link to keep attack rates and handling times positive. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,P0,1.0,a,h)/N0,
+                 nlf(a~exp(alog)),
+                 nlf(h~exp(hlog)),
+                 alog~I(P0-1.0),
+                 hlog~I(P0-1.0),
+                 nl = TRUE)
+FR.priors  = c(prior(normal(0.0, 1.0), nlpar="alog"),
+               prior(normal(0.0, 1.0), nlpar="hlog"))
+fit.6 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.6, vectorize=TRUE)
+summary(fit.6)
+```
+
+Note that estimated parameters including intercepts are on logscale. We find a negative effect of predator abundance on attack rates (95% credible interval notably far away from 0), but no effect on handling time (mean estimate close to 0 and 95% credible interval widely covering 0). 
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.6 = readRDS(file="fit_6.rds")
+expose_functions(fit.6, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.6)
+```
+
+
+
+```{r}
+#| warning: false
+plot_fit(fit.6, df)
+```
+
+While the Crowley-Martin model forced effect on handling time to be positive to simultaneously get a negative effect on attack rate, this model estimates a negative effect on attack rate only.
+
+```{r}
+#| warning: false
+p3 = plot(conditional_effects(fit.6,
+                              effects="P0",
+                              nlpar="a"),
+          plot = FALSE)
+p4 = plot(conditional_effects(fit.6,
+                              effects="P0",
+                              nlpar="h"),
+          plot = FALSE)
+p3 = p3[[1]] + coord_cartesian(ylim=c(0.5,2))
+p4 = p4[[1]] + coord_cartesian(ylim=c(0.16,0.26))
+plot_grid(p3, p4, ncol=2)
+```
+
+### Comparison
+
+We compare both models to the previous best model, which was the GLM-style model for attack rate only. 
+
+
+```{r}
+#| eval: false
+LOO(fit.4, fit.5, fit.6)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.4), LOO(fit.5), LOO(fit.6))
+```
+
+The previous model with a log-linear dependence of attack rates on predator abundance performs best. There is no sufficient support for including an effect on handling times.
+
+## Type 3 models
+
+There are generalized type 3 models (density-dependent attack rates $a=bN^q$) available for the 
+
+* Beddington-DeAngelis `TypeGenBD_dyn(N,P,Time,b,h,q,c)`, 
+* Hassell-Varley `TypeGenHV_dyn(N,P,Time,b,h,q,c)` and 
+* Crowley-Martin `TypeGenCM_dyn(N,P,Time,b,h,q,c)` models.
+
+Predictions are computed numerically, i.e. computation will take longer than for the corresponding type 2 models. Alternatively, the generalized Holling type 3 models can be used with parameters depending on predator abundance. For example, the generalized Beddington-DeAngelis model is equivalent to:
+```{r}
+# TypeGenBD_dyn(N, P, Time, b, h, q, c)
+FR.formula = bf( NE | trials(N0) ~ Type3GenH_dyn(N, P, Time, b, h, q)/N0,
+                 nlf(b~b0/(1.0+c*(P0-1.0))),
+                 b0+h+c~1,
+                 nl = TRUE)
+```
+
