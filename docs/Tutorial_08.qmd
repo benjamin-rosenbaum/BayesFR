@@ -19,7 +19,7 @@ $F_\text{capita}(N)=\frac{aN}{1+ahN}$, and total feeding is **proportionial** to
 </ol>
 
 
-Here, we will include models that assume predator interference affects the per-capita feeding rate by decreasing attack rates and / or increasing handling times. 
+Here, we will include models that assume predator interference affects the per-capita feeding rate by decreasing attack rates and / or increasing handling times, see [Skalski & Gilliam (2001)](https://doi.org/10.1890/0012-9658(2001)082[3083:FRWPIV]2.0.CO;2), for example. 
 
 We use a dataset from [Papanikolaou et al. (2020)](https://doi.org/10.1002/ece3.7137) downloaded from [Dryad](https://doi.org/10.5061/dryad.2ngf1vhmj). Mirid nymphs (here only 1st instar data used) feed on Lepidoptera eggs, and experiments were performed with varying predator abundance of 1, 2, 3, or 4 individuals. Eaten eggs were not replaced. The total number of eaten eggs seems to increase with predator abundance (to no surprise!), but we are interested if per capita feeding is affected by predator interference. Note that models will be fitted to the data on the observed scale (total number of eaten eggs, integers), and not the fractional numbers of the per capita feeding. 
 
@@ -27,7 +27,7 @@ We use a dataset from [Papanikolaou et al. (2020)](https://doi.org/10.1002/ece3.
 #| warning: false
 library("BayesFR")
 library("ggplot2")
-library("cowplot")
+library("cowplot") # ggplot grids
 
 df = df_Papanikolaou_et_al_2021_ECOL_EVOL
 df = subset(df, ID=="1st instar")

@@ -20,19 +20,19 @@ Easy application of Bayesian inference for functional responses via
 
 This package allows to fit various FR models for single- and multi-prey 
 experiments. It uses dynamical prediction models to correct for prey depletion. 
-The brms framework facilitates statistical modelling and enables users to 
+The brms framework facilitates statistical modeling and enables users to 
 conveniently incorporate covariates such as temperature gradients, experimental 
 treatment variables, or random effects that account for grouping in 
 experimental units. Default brms functions make it easy to perform model 
 checking, model comparison and hypothesis testing. Potential statistical issues 
-with data from feeding trials, such as overdispersion or zero inflation, can be 
+with data from feeding trials, such as overdispersion, can be 
 resolved by effortlessly switching between likelihood functions.
 
 The BayesFR package, together with its tutorials, provides students and 
 researchers with a comprehensive and integrated statistical framework for easily 
 testing their hypotheses on trophic interactions.
 
-For an introduction to [brms](https://paulbuerkner.com/brms/), see for example 
+For an introduction to brms, see for example 
 [here](https://github.com/benjamin-rosenbaum/bayesian-intro). 
 
 
