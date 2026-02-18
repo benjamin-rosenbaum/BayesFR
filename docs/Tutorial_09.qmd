@@ -199,7 +199,7 @@ Number of eaten prey $N_E$ is still bounded between $0$ and $N_0$. The **Beta** 
 ```{r}
 min(df$NE/df$N0)    # NE==0 ?
 max(df$NE/df$N0)    # NE==N0 ?
-which(df$N0==df$NE) # which datapoints? (here it's just 1)
+sum(df$N0==df$NE)   # how many datapoints?
 ```
 
 ### Gamma distribution
@@ -267,12 +267,12 @@ df.trunc$NE[ID] = df.trunc$N0[ID]-1
 ```{r}
 #| eval: false
 FR.formula = bf( NE/N0 ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
-                 nlf(phi~phi0*N0),
-                 a+h+phi0 ~ 1,
+                 phi ~ 0+N0,
+                 a+h ~ 1,
                  nl = TRUE)
 FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
                prior(exponential(1.0), nlpar="h", lb=0),
-               prior(exponential(0.01), nlpar="phi0", lb=0)
+               prior(exponential(0.01), dpar="phi", lb=0)
 )
 fit.4 = brm(FR.formula,
             family   = Beta(link="identity", link_phi="identity"),
