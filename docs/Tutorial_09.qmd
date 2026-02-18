@@ -1,0 +1,400 @@
+---
+title: "Likelihood functions"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    toc-depth: 3   
+    toc-title: "Contents" 
+    toc-float: true
+    toc-location: left
+---
+
+```{r}
+#| warning: false
+library("BayesFR")
+library("ggplot2")
+library("cowplot") # ggplot grids
+```
+
+A statistical model consists of at least 2 parts: a deterministic prediction model, and a stochastic part (distributional model) that connects the observations with the predictions. Together, they define the likelihood function of a statistical model. So far, we assumed the observed number of eaten prey were Poisson distributed (integer, lower bound $0$) in case of prey replacement, or Binomial distributed (integer, bounded between $0$ and $N_0$) in experiments without prey replacement. 
+
+We have to check if the statistical model is appropriate, i.e. predictions respect boundedness, variation and dispersion (mean-variance scaling) of the data. Posterior predictive checks are performed with the functions `pp_check()` and 
+`conditional_effects(method="posterior_predict")`. In case predictions deviate in one or more of these aspects from the data, brms offers many distributions to choose from. Here, we look at 2 examples with possible solutions to (1) overdispersion, and (2) non-integer observations.
+
+## Overdispersion
+
+We worked with this data before in the random effects tutorial. Observations show a strong variation, because the experiments were performed with predators of varying body size. We pretend that the dataset does neither include predator ID, nor body size. Fitting this data without these predictors, we estimate population-level attack rates and handling times.
+
+```{r}
+#| warning: false
+df = df_Schroeder_et_al_2016_OEC
+for(i in 1:nrow(df)){ # correct a counting error
+  df$NE[i] = min(df$NE[i], df$N0[i])
+}
+ggplot(df, aes(N0,NE)) +
+  geom_point(alpha=0.2, size=2)
+```
+
+### Binomial distribution
+
+In this first, naive approach, we fit a Binomial model as before. 
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 a+h ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+summary(fit.1)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.1 = readRDS(file="fit_1.rds")
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.1)
+```
+
+Now checking how well this model reproduces the distribution of of observed data: 
+
+```{r}
+#| warning: false
+pp_check(fit.1, ndraws=100)
+```
+
+There is a strong mismatch between observed and predicted values, mostly caused by a stronger concentration of predicted values around the maximum feeding rate. 
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.1,
+                              int_conditions = data.frame(N0=seq(10,2000,by=10))),
+          points = TRUE,
+          point_args = list(alpha=0.2, size=2),
+          plot = FALSE)
+p1 = p1[[1]] + ggtitle("Fitted") + coord_cartesian(ylim=c(0,200))
+p2 = plot(conditional_effects(fit.1,
+                              int_conditions = data.frame(N0=seq(10,2000,by=10)),
+                              method = "posterior_predict"),
+          points = TRUE,
+          point_args = list(alpha=0.2, size=2),
+          plot = FALSE)
+p2 = p2[[1]] + ggtitle("Predicted")+ coord_cartesian(ylim=c(0,200))
+plot_grid(p1, p2, ncol=2)
+```
+
+The variation of predicted values is fixed by the Binomial distribution and does not match observed variation. 
+
+### Beta-Binomial distribution
+
+The Beta-Binomial distribution allows additional variation through a **precision parameter** `phi`, which is the inverse of overdispersion. For large `phi`, the Beta-Binomial is close to a Binomial, for small `phi` it is overdispersed (larger variance). We replace `family=binomial()` by `family=beta_binomial()`, additionally we need to overwrite default link functions with `link="identity"` and also `link_phi="identity"`. To get the right variance scaling, we let `phi` scale proportionally with `N0` by specifying `phi~0+N0` (no intercept) and use a positive prior on the scaling factor. See the appendix below for a detailed explanation.
+
+
+```{r}
+#| eval: false
+FR.formula = bf( NE | trials(N0) ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 phi ~ 0+N0,
+                 a+h ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0),
+               prior(exponential(0.01), dpar="phi", lb=0)
+)
+fit.2 = brm(FR.formula,
+            family   = beta_binomial(link="identity", link_phi="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.2, vectorize=TRUE)
+summary(fit.2)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.2 = readRDS(file="fit_2.rds")
+expose_functions(fit.2, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.2)
+```
+
+A small `phi` (low precision) indicates a strong overdispersion. Also, estimated attack rate is lower than for the Binomial model above and features a much wider credible interval (estimate for the random-effects model in section 6 was also lower with a wide CI [1.02,1.58]).
+
+```{r}
+#| warning: false
+pp_check(fit.2, ndraws=100)
+```
+
+While the comparison of predicted with observed data is far from perfect, it is a substantial improvement to the Binomial model. 
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.2,
+                              int_conditions = data.frame(N0=seq(10,2000,by=10))),
+          points = TRUE,
+          point_args = list(alpha=0.2, size=2),
+          plot = FALSE)
+p1 = p1[[1]] + ggtitle("Fitted") + coord_cartesian(ylim=c(0,200))
+p2 = plot(conditional_effects(fit.2,
+                              int_conditions = data.frame(N0=seq(10,2000,by=10)),
+                              method = "posterior_predict"),
+          points = TRUE,
+          point_args = list(alpha=0.2, size=2),
+          plot = FALSE)
+p2 = p2[[1]] + ggtitle("Predicted")+ coord_cartesian(ylim=c(0,200))
+plot_grid(p1, p2, ncol=2)
+```
+
+Posterior predictions reflect the range of the data much better now. 
+
+```{r}
+#| eval: false
+LOO(fit.1, fit.2)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+loo_compare(LOO(fit.1), LOO(fit.2))
+```
+
+Model comparison indicates a strong support of the Beta-Binomial model. Here, even without access to the variables causing the strong variation in the data (predator ID and/or predator body size), the Beta-Binomial estimates population-level parameters with a more appropriate uncertainty than the Binomial model.
+
+## Non-integer response
+
+We use a dataset from tutorial 3 where prey were not replaced, here a subset of the data from a different temperature level. Although observations were integer numbers of eaten prey, for purely didactic reasons we pretend that observations were non-integer densities, which makes the Binomial distribution unfeasible. 
+
+
+```{r}
+#| warning: false
+df = df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY
+df = subset(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY, ID=="Figure 1d")
+ggplot(aes(N0,NE), data=df) +
+  geom_jitter(alpha = 0.5, width=0.5, height=0, size=2) +
+  coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
+```
+
+Number of eaten prey $N_E$ is still bounded between $0$ and $N_0$. The **Beta** distribution can be used for modelling responses with an upper and lower boundary, but it requires that $0<N_E<N_0$, or equivalently $0<\frac{N_E}{N_0}<1$ (boundaries are not met). Unfortunately, this data contains 1 observation with $N_E=N_0$ (all prey were eaten). Here we can either omit this datapoint or replace it with a maximum value smaller than $N_0$ to use the Beta distribution (below), or use a distribution without upper boundary such as **Gamma** or **Lognormal**.
+
+```{r}
+min(df$NE/df$N0)    # NE==0 ?
+max(df$NE/df$N0)    # NE==N0 ?
+which(df$N0==df$NE) # which datapoints? (here it's just 1)
+```
+
+### Gamma distribution
+
+```{r}
+#| eval: false
+FR.formula = bf( NE ~ Type2H_dyn(N0,1.0,1.0,a,h),
+                 a+h ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0)
+)
+fit.3 = brm(FR.formula,
+            family   = Gamma(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.3, vectorize=TRUE)
+summary(fit.3)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.3 = readRDS(file="fit_3.rds")
+expose_functions(fit.3, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.3)
+```
+
+```{r}
+#| warning: false
+pp_check(fit.3, ndraws=100)
+```
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.3),
+          points = TRUE,
+          point_args = list(alpha=0.5, size=2),
+          plot = FALSE)
+p1 = p1[[1]] +  coord_cartesian(ylim=c(0,110)) + ggtitle("Fitted")
+p2 = plot(conditional_effects(fit.3, method = "posterior_predict"),
+          points = TRUE,
+          point_args = list(alpha=0.5, size=2),
+          plot = FALSE)
+p2 = p2[[1]] +
+  coord_cartesian(ylim=c(0,110)) + ggtitle("Predicted")
+plot_grid(p1, p2, ncol=2)
+```
+
+### Beta distribution
+
+```{r}
+ID = which(df$N0==df$NE)
+df.trunc = df
+df.trunc$NE[ID] = df.trunc$N0[ID]-1
+```
+
+```{r}
+#| eval: false
+FR.formula = bf( NE/N0 ~ Type2H_dyn(N0,1.0,1.0,a,h)/N0,
+                 nlf(phi~phi0*N0),
+                 a+h+phi0 ~ 1,
+                 nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0),
+               prior(exponential(0.01), nlpar="phi0", lb=0)
+)
+fit.4 = brm(FR.formula,
+            family   = Beta(link="identity", link_phi="identity"),
+            prior    = FR.priors,
+            data     = df.trunc,
+            cores    = 4,
+            stanvars = stanvar(scode=Type2H_dyn_code, block="functions")
+)
+expose_functions(fit.4, vectorize=TRUE)
+summary(fit.4)
+```
+
+```{r}
+#| echo: false
+#| output: FALSE
+fit.4 = readRDS(file="fit_4.rds")
+expose_functions(fit.4, vectorize=TRUE)
+```
+
+```{r}
+#| echo: false
+summary(fit.4)
+```
+
+```{r}
+#| warning: false
+pp_check(fit.4, ndraws=100)
+```
+
+```{r}
+#| warning: false
+p1 = plot(conditional_effects(fit.4),
+          points = TRUE,
+          point_args = list(alpha=0.5, size=2),
+          plot = FALSE)
+p1 = p1[[1]] + coord_cartesian(ylim=c(0,1)) + ggtitle("Fitted")
+p2 = plot(conditional_effects(fit.4, method = "posterior_predict"),
+          points = TRUE,
+          point_args = list(alpha=0.5, size=2),
+          plot = FALSE)
+p2 = p2[[1]] + coord_cartesian(ylim=c(0,1)) + ggtitle("Predicted")
+plot_grid(p1, p2, ncol=2)
+```
+
+```{r}
+#| warning: false
+# x-axis
+df.new = data.frame(N0=1:max(df.trunc$N0))
+
+# fitted = regression curve
+df.fit = fitted(fit.4, newdata=df.new)
+head(df.fit)
+df.fit = df.fit*df.new$N0
+df.fit = cbind(df.fit, df.new)
+head(df.fit)
+
+p1 = ggplot(df.trunc, aes(N0, NE)) +
+  geom_point(alpha=0.6, size=2) +
+  geom_ribbon(aes(x = N0, ymin=Q2.5, ymax=Q97.5),
+              alpha = 0.2,
+              inherit.aes = FALSE,
+              data = df.fit) +
+  geom_line(aes(x = N0, y = Estimate),
+            linewidth = 1,
+            col = "blue",
+            inherit.aes = FALSE,
+            data = df.fit) +
+  coord_cartesian(ylim=c(0,110)) +
+  ggtitle("Fitted")
+
+# predicted = regression curve and residual distribution
+df.new = data.frame(N0=1:max(df.trunc$N0))
+
+df.pred = predict(fit.4, newdata=df.new)
+head(df.pred)
+df.pred = df.pred*df.new$N0
+df.pred = cbind(df.pred, df.new)
+head(df.pred)
+
+p2 = ggplot(df.trunc, aes(N0, NE)) +
+  geom_point(alpha=0.6, size=2) +
+  geom_ribbon(aes(x = N0, ymin=Q2.5, ymax=Q97.5),
+              alpha = 0.2,
+              inherit.aes = FALSE,
+              data = df.pred) +
+  geom_line(aes(x = N0, y = Estimate),
+            linewidth = 1,
+            col = "blue",
+            inherit.aes = FALSE,
+            data = df.pred) +
+  coord_cartesian(ylim=c(0,110)) +
+  ggtitle("Predicted")
+
+plot_grid(p1, p2, ncol=2)
+```
+
+## Appendix
+
+The Beta-Binomial distribution features a larger variance than the Binomial distribution by assuming the predicted probability of being eaten $p=N_E/N_0$ is not fixed, but itself features some variation expressed by a Beta distribution with precision $\varphi$ (overdispersion is $\theta=1/\varphi$).
+
+In the **Binomial distribution**, the mean is 
+$$\mu=N_E=pN_0$$
+where $p=N_E/N_0$ is the average probability of a prey individual being eaten. For large $N_0$, feeding is limited by handling time $h=1/f_\max$, and $N_E$ asymptotically approaches $f_\max$ (a constant). Here, average probability $p\approx f_\max/N_0$ tends to zero for increasing $N_0$. For large $N_0$, the variance 
+$$\begin{align}
+\sigma^2 &= N_0p(1-p) \\
+& = N_0 \frac{N_E}{N_0}\left(1-\frac{N_E}{N_0}\right) \\
+& \approx N_0 \frac{f_\max}{N_0}\left(1-\frac{f_\max}{N_0}\right) \\
+&= f_\max\left(1-\frac{f_\max}{N_0}\right)
+\end{align}
+$$
+tends to $f_\max$.
+
+Following [Fenlon & Faddy (2006)](https://doi.org/10.1016/j.ecolmodel.2006.04.002), which describe the **Beta-Binomial distribution** for functional responses, the mean  
+$$\mu=N_E=pN_0$$
+is the same as above. The variance 
+$$\sigma^2 = N_0p(1-p)\left(1+\frac{\theta}{1+\theta}(N_0-1)\right) $$
+however, now includes a scaling factor depending on overdispersion $\theta=1/\varphi$ and also $N_0$. This $N_0$-dependence would let the variance increase with $N_0$ indefinitely, even if the first part of the equation is limited as shown above. There is no reason to assume unlimited variance for handling-time limited feeding, and we can keep the variance constant by replacing $\theta$ by $\theta/N_0$
+
+$$\begin{align}
+\sigma^2 & = N_0p(1-p)\left(1+\frac{\theta/N_0}{1+\theta/N_0}(N_0-1)\right) \\
+&= N_0p(1-p)\left(1+\frac{\theta}{1+\theta/N_0}\frac{N_0-1}{N_0}\right)
+\end{align}$$
+For large $N_0$, the first part tends to $f_\max$ as shown above, and the second part tends to $(1+\theta)$, so the variance
+$$\sigma^2 \approx f_\max(1+\theta)$$
+is constant. This requires replacing the precision parameter $\varphi$ by $\varphi N_0$ (same as replacing $\theta$ by $\theta/N_0$).
