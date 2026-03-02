@@ -204,6 +204,8 @@ sum(df$N0==df$NE)   # how many datapoints?
 
 ### Gamma distribution
 
+We can straightforward replace the Binomial with the Gamma distribution. Note that the prediction model `~Type2H_dyn()` is **not** divided by `N0`. 
+
 ```{r}
 #| eval: false
 FR.formula = bf( NE ~ Type2H_dyn(N0,1.0,1.0,a,h),
@@ -235,6 +237,8 @@ expose_functions(fit.3, vectorize=TRUE)
 summary(fit.3)
 ```
 
+The Gamma distribution includes a parameter `shape`, which defines both the variance and skewness of the distribution for a given mean (both decline with an increase in `shape`). 
+
 ```{r}
 #| warning: false
 pp_check(fit.3, ndraws=100)
@@ -256,13 +260,19 @@ p2 = p2[[1]] +
 plot_grid(p1, p2, ncol=2)
 ```
 
+It looks like the Gamma distribution overpredicts the range of observed data, especially the upper quantiles are systematically too large. This is probably because the Gamma does not have an upper bound. Therefore, we will now use a Beta distribution that respects the upper limits as well.
+
 ### Beta distribution
+
+We already noticed that for one observation we have $N_E=N_0$, which is unfeasible for the Beta distribution. We will fit $N_E/N_0\sim p$, with data $0<N_E/N_0<1$. We could either remove this observation (and loose the information that this feeding trial experienced strong predation), or replace the observed $N_E/N_0$ by a value close to, but smaller than 1. Although tempting, it is generally not recommended to use an arbitrarily close value like $N_E/N_0=0.999$, or similar. Values close to the mathematical boundary of a continuous distribution can introduce a strong bias. Alternatively, we replace it by the next practically observable unit, which here was $(N_E-1)/N_0$.    
 
 ```{r}
 ID = which(df$N0==df$NE)
 df.trunc = df
 df.trunc$NE[ID] = df.trunc$N0[ID]-1
 ```
+
+The Beta distribution includes a precision parameter $\varphi$, which has to scale with $N_0$ for the same reasons as discussed in the Beta-Binomial model above (see Appendix): `phi~0+N0`. The default link functions of `family=Beta()` have to be overwritten by `identity`, and we are good to go.
 
 ```{r}
 #| eval: false
@@ -297,6 +307,8 @@ expose_functions(fit.4, vectorize=TRUE)
 summary(fit.4)
 ```
 
+Note how attack rate is lower as in the Gamma model above.
+
 ```{r}
 #| warning: false
 pp_check(fit.4, ndraws=100)
@@ -317,6 +329,10 @@ p2 = p2[[1]] + coord_cartesian(ylim=c(0,1)) + ggtitle("Predicted")
 plot_grid(p1, p2, ncol=2)
 ```
 
+The conditional effects plots looks different now. It does not show predictions for $N_E$, but predictions for $N_E/N_0$. The Beta distribution, along with the appropriate scaling of the precision parameter (precision increases with $N_0$), accurately describes the distribution of the data.
+
+Unfortunately, `conditional_effects()` does not transform predictions back to the original $N_E$-scale. We have to do this manually for producing the fitted and the predictive distributions, by using `fitted()` and `predict()`, respectively, and multiply by `N0`.
+
 ```{r}
 #| warning: false
 # x-axis
@@ -328,6 +344,13 @@ head(df.fit)
 df.fit = df.fit*df.new$N0
 df.fit = cbind(df.fit, df.new)
 head(df.fit)
+
+# predicted = regression curve and residual distribution
+df.pred = predict(fit.4, newdata=df.new)
+head(df.pred)
+df.pred = df.pred*df.new$N0
+df.pred = cbind(df.pred, df.new)
+head(df.pred)
 
 p1 = ggplot(df.trunc, aes(N0, NE)) +
   geom_point(alpha=0.6, size=2) +
@@ -342,16 +365,6 @@ p1 = ggplot(df.trunc, aes(N0, NE)) +
             data = df.fit) +
   coord_cartesian(ylim=c(0,110)) +
   ggtitle("Fitted")
-
-# predicted = regression curve and residual distribution
-df.new = data.frame(N0=1:max(df.trunc$N0))
-
-df.pred = predict(fit.4, newdata=df.new)
-head(df.pred)
-df.pred = df.pred*df.new$N0
-df.pred = cbind(df.pred, df.new)
-head(df.pred)
-
 p2 = ggplot(df.trunc, aes(N0, NE)) +
   geom_point(alpha=0.6, size=2) +
   geom_ribbon(aes(x = N0, ymin=Q2.5, ymax=Q97.5),
@@ -369,13 +382,15 @@ p2 = ggplot(df.trunc, aes(N0, NE)) +
 plot_grid(p1, p2, ncol=2)
 ```
 
+On this scale, too, the Beta distribution describes the range of observed data better than the Gamma.
+
 ## Appendix
 
 The Beta-Binomial distribution features a larger variance than the Binomial distribution by assuming the predicted probability of being eaten $p=N_E/N_0$ is not fixed, but itself features some variation expressed by a Beta distribution with precision $\varphi$ (overdispersion is $\theta=1/\varphi$).
 
 In the **Binomial distribution**, the mean is 
 $$\mu=N_E=pN_0$$
-where $p=N_E/N_0$ is the average probability of a prey individual being eaten. For large $N_0$, feeding is limited by handling time $h=1/f_\max$, and $N_E$ asymptotically approaches $f_\max$ (a constant). Here, average probability $p\approx f_\max/N_0$ tends to zero for increasing $N_0$. For large $N_0$, the variance 
+where $p=N_E/N_0$ is the average probability of a prey individual being eaten. For large $N_0$, feeding is limited by handling time $h=1/f_\max$, and $N_E$ asymptotically approaches $f_\max$. Here, average probability $p\approx f_\max/N_0$ tends to zero for increasing $N_0$. For large $N_0$, the variance 
 $$\begin{align}
 \sigma^2 &= N_0p(1-p) \\
 & = N_0 \frac{N_E}{N_0}\left(1-\frac{N_E}{N_0}\right) \\
@@ -383,13 +398,13 @@ $$\begin{align}
 &= f_\max\left(1-\frac{f_\max}{N_0}\right)
 \end{align}
 $$
-tends to $f_\max$.
+tends to $f_\max$ (a constant).
 
 Following [Fenlon & Faddy (2006)](https://doi.org/10.1016/j.ecolmodel.2006.04.002), which describe the **Beta-Binomial distribution** for functional responses, the mean  
 $$\mu=N_E=pN_0$$
 is the same as above. The variance 
 $$\sigma^2 = N_0p(1-p)\left(1+\frac{\theta}{1+\theta}(N_0-1)\right) $$
-however, now includes a scaling factor depending on overdispersion $\theta=1/\varphi$ and also $N_0$. This $N_0$-dependence would let the variance increase with $N_0$ indefinitely, even if the first part of the equation is limited as shown above. There is no reason to assume unlimited variance for handling-time limited feeding, and we can keep the variance constant by replacing $\theta$ by $\theta/N_0$
+however, now includes a scaling factor depending on overdispersion $\theta=1/\varphi$ and also $N_0$. This $N_0$-dependence would let the variance increase with $N_0$ indefinitely, even if the first part of the equation is limited as shown above. There is no reason to assume unlimited variance for handling-time limited feeding, and we can keep the variance bounded by replacing $\theta$ by $\theta/N_0$
 
 $$\begin{align}
 \sigma^2 & = N_0p(1-p)\left(1+\frac{\theta/N_0}{1+\theta/N_0}(N_0-1)\right) \\
@@ -397,4 +412,4 @@ $$\begin{align}
 \end{align}$$
 For large $N_0$, the first part tends to $f_\max$ as shown above, and the second part tends to $(1+\theta)$, so the variance
 $$\sigma^2 \approx f_\max(1+\theta)$$
-is constant. This requires replacing the precision parameter $\varphi$ by $\varphi N_0$ (same as replacing $\theta$ by $\theta/N_0$).
+is kept bounded for large $N_0$, too. This requires replacing the precision parameter $\varphi$ by $\varphi N_0$ (same as replacing $\theta$ by $\theta/N_0$).
