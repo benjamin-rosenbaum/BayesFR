@@ -53,8 +53,8 @@ install_github("benjamin-rosenbaum/BayesFR")
 6. [Random effects: individual- and population-level estimates](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_06.html)
 7. [Prey mortality](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_07.html)
 8. [Predator interference](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_08.html)
-9. [Likelihood functions and distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_09.html)
-- Prior distributions
+9. [Likelihood functions and response distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_09.html)
+10. [Prior distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_10.html)
 - Multi-species functional responses
 
 ## References
