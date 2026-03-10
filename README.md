@@ -1,4 +1,4 @@
-# BayesFR package
+# BayesFR package <img src="man/figures/BayesFR_hex.png" align="right" height="139" />
 
 ```r
 # Example code for fitting a Type 3 FR dynamical model:
