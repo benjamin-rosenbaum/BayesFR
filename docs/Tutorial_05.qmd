@@ -173,6 +173,7 @@ expose_functions(fit.2, vectorize=TRUE)
 ```{r}
 #| echo: false
 #| output: true
+#| warning: false
 summary(fit.2)
 ```
 
@@ -424,6 +425,7 @@ expose_functions(fit.4, vectorize=TRUE)
 ```{r}
 #| echo: false
 #| output: true
+#| warning: false
 summary(fit.4)
 ```
 
@@ -462,6 +464,7 @@ expose_functions(fit.5, vectorize=TRUE)
 ```{r}
 #| echo: false
 #| output: true
+#| warning: false
 summary(fit.5)
 ```
 

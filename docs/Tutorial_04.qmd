@@ -77,7 +77,7 @@ plot(conditional_effects(fit.1),
 
 ## Predator Size
 
-**Our first hypothesis is that predator size affects both attack rates (increase) and handling times (decrease).** We specify `a ~ 0+PredSize` and `h ~ 0+PredSize`, or short: `a+h ~ 0+PredSize`, using effects-coding instead of dummy-coding. This choice also affects the prior definition. With effects-coding, parameters are level-specific attack rates and handling times, for which we  specify non-negative prior distributions. If we had used dummy-coding, parameters were intercept (reference level) and level differences, where differences can be positive or negative.
+**Our first hypothesis is that predator size affects both attack rates (increase) and handling times (decrease).** We specify `a ~ 0+PredSize` and `h ~ 0+PredSize`, or short: `a+h ~ 0+PredSize`, using effects-coding instead of dummy-coding. This choice also affects the prior definition. With effects-coding, parameters are level-specific attack rates and handling times, for which wespecify non-negative prior distributions. If we had used dummy-coding, parameters were intercept (reference level) and level differences, where differences can be positive or negative.
 
 ```{r}
 #| eval: false
@@ -111,7 +111,7 @@ expose_functions(fit.2, vectorize=TRUE)
 summary(fit.2)
 ```
 
-The model estimates three attack rates and three handling times. First, we look at the model fit. By specifying an "interaction" `effects="N0:PredSize"`, the `conditional_effects()` function plots model fits for all three levels of predator size. 
+The model estimates three attack rates and three handling times. First, we look at the model fit. By specifying a combination `effects="N0:PredSize"`, the `conditional_effects()` function plots model fits for all three levels of predator size. 
 
 ```{r}
 #| warning: false
@@ -214,7 +214,7 @@ expose_functions(fit.3, vectorize=TRUE)
 summary(fit.3)
 ```
 
-This model has 3 predictors (N0, PredSize, PreySize), but `conditional_effects` only allows to specify 2-way interactions as `effects`. Additional predictors must be specified as `conditions` to plot all model fits. 
+This model has 3 predictors (N0, PredSize, PreySize), but `conditional_effects` only allows to specify 2-way combinations as `effects`. Additional predictors must be specified as `conditions` to plot all model fits. 
 
 
 ```{r}
@@ -237,7 +237,7 @@ plot(conditional_effects(fit.3,
      point_args=list(alpha=0.5, width=0.5, size=1.5))
 ```
 
-To test the research question, we test if including prey size as a predictor for handling times improved the model. Model comparison indeed shows that the **new model performs better**, and it also has a higher amount of explained variation R2.
+To answer the research question, we test if including prey size as a predictor for handling times improved the model. Model comparison indeed shows that the **new model performs better**, and it also has a higher amount of explained variation R2.
 
 ```{r}
 #| eval: false
