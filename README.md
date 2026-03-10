@@ -1,17 +1,5 @@
 # BayesFR package <img src="man/figures/BayesFR_hex.png" align="right" height="139" />
 
-```r
-# Example code for fitting a Type 3 FR dynamical model:
-FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,P0,Time,b,h)/N0,
-                 b~1, h~1, nl = TRUE)
-FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
-               prior(exponential(1.0), nlpar="h", lb=0) )
-fit.1      = brm(FR.formula,
-                 family   = binomial(link="identity"),
-                 prior    = FR.priors,
-                 stanvars = stanvar(scode=Type3H_dyn_code, block="functions"),
-                 data     = df )
-```
 
 ## Fitting functional responses in 1- and 2-prey systems
 
@@ -56,6 +44,21 @@ install_github("benjamin-rosenbaum/BayesFR")
 9. [Likelihood functions and response distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_09.html)
 10. [Prior distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_10.html)
 - Multi-species functional responses
+
+## Example 
+
+```r
+# Example code for fitting a Type 3 FR dynamical model:
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,P0,Time,b,h)/N0,
+                 b~1, h~1, nl = TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0) )
+fit.1      = brm(FR.formula,
+                 family   = binomial(link="identity"),
+                 prior    = FR.priors,
+                 stanvars = stanvar(scode=Type3H_dyn_code, block="functions"),
+                 data     = df )
+```
 
 ## References
 
