@@ -11,9 +11,8 @@ rm(list=ls())
 library(BayesFR)
 ```
 
-We load a dataset which is included in this package. It is originally from Hossie 
-and Murray (2010) and was made available in the FoRAGE database (Uiterwaal et al. 
-2022). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
+We load a dataset which is included in this package. It is originally from [Hossie 
+and Murray (2010)](https://doi.org/10.1007/s00442-010-1568-6) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. Here, we will regress number of eaten prey $N_E$ against initial prey abundance $N_0$. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
 
 ```{r}
 data(df_Hossie_and_Murray_2010_OECOLOGIA)
@@ -28,13 +27,14 @@ We want to estimate a type 3 functional response, which has a density-dependent 
 $$ F(N) = \frac{bN^2}{1+bhN^2}PT$$
 to the observed data. Instead, prey abundance is modeled dynamically by the differential equation 
  $$ \frac{dN}{dt} = -\frac{bN^2}{1+bhN^2}P, \quad N(t=0)=N_0$$
-With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented.
+With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented. (An alternative parameterization $\frac{f_\max N^2}{N_\text{half}^2+N^2}$ using maximum feeding rate and handling time is presented in the priors tutorial.)
+
 
 Then, we still need to define a likelihood function for model fitting. Observed numbers of eaten prey are integers bounded between $0$ and $N_0$, because the predator cannot eat more than the initial abundance. This makes the Binomial distribution 
 $$N_E\sim\text{Binomial}\left(n,\ p\right)$$ 
-with $n=N_0$ trials and individual prey probability of being eaten $p=\frac{N_0-N_T}{N_0}$ an obvious choice.
+with $n=N_0$ trials and individual prey probability of being eaten $p=\frac{N_0-N_T}{N_0}$ an obvious choice. Alternatively, the Beta Binomial distribution for overdispersed data is discussed in the tutorial on likelihood functions. 
 
-The dynamical prediction model, defined by the function `Type3H_dyn()` coded in `Type3H_dyn_code`, computes number of eaten prey based on these arguments: abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `b` and `h`, in that exact order. We define the brms formula:
+The dynamical prediction model is defined by the function `Type3H_dyn()` and coded in `Type3H_dyn_code` (which is used later in the brms call). It computes number of eaten prey based on these arguments: abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `b` and `h`, in that exact order. We define the brms formula:
 ```{r}
 FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,1.0,1.0,b,h)/N0,
                  b~1, h~1,
@@ -56,7 +56,7 @@ fit.1 = readRDS(file="fit1.rds")
 expose_functions(fit.1, vectorize=TRUE)
 ```
 
-We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the indentity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1).  After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
+We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the identity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1). `stanvars` contains this package's code for the prediction model `Type3H_dyn_code`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
 
 ```{r}
 #| eval: false

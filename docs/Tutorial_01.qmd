@@ -11,8 +11,7 @@ rm(list=ls())
 library(BayesFR)
 ```
 
-We load a dataset which is included in this package. It is originally from Michalko and Pekar (2017) and was made available in the FoRAGE database (Uiterwaal et al. 2022). It contains experiments with a spider feeding on a pear psylla pest. All 
-experiments were run for 7 hours and prey abundance was kept constant by replacing eaten prey.
+We load a dataset which is included in this package. It is originally from [Michalko and Pekar (2017)](https://doi.org/10.1086/690501) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It contains experiments with a spider feeding on a pear psylla pest. With feeding trial data, we want to regress number of eaten prey $N_E$ against offered prey abundance $N_0$. All experiments were run for 7 hours and prey abundance $N_0$ was kept constant by replacing eaten prey.
 
 ```{r}
 data(df_Michalko_and_Pekar_2017_AM_NAT)
@@ -26,11 +25,13 @@ ggplot(aes(N0,NE), data=df) +
 We want to estimate a type 2 functional response, parameterized by attack rate $a$ and handling time $h$. Since there was no prey depletion, we can directly fit the per-capita feeding rate, multiplied by predator abundance $P$ and experimental duration $T$ to the observed data.
 
 $$ F(N) = \frac{aN}{1+ahN}PT$$
-Additional to this deterministic prediction model, we need to specify how we assume the observed data to be distributed around the model predictions, this defines the likelihood function. Observed data $N_E$ are non-negative integers and theoretically do not have an upper boundary (since eaten prey are constantly replaced). This makes the Poisson distribution an obvious choice:
+(An alternative parameterization $\frac{f_\max N}{N_\text{half}+N}$ using maximum feeding rate and handling time is presented in the priors tutorial.)
+
+Additional to this deterministic prediction model, we need to specify how we assume the observed data to be distributed around the model predictions, this defines the likelihood function. Observed data $N_E$ are non-negative integers and theoretically do not have an upper boundary (since eaten prey are constantly replaced). Hence we can use the Poisson distribution (or, alternatively, the Negative Binomial for overdispersed data)
 
 
 $$ N_E \sim \text{Poisson} \left( F\left(N_0\right) \right)$$
-A nonlinear prediction model for brms can be defined in `bf()` the with model formula as first argument, parameters in the next line, and specifying that it is a nonlinear model with `nl=TRUE`. Here, `a~1, h~1` just means that these parameters are not depending on other predictors, i.e. fitting these parameters as is.
+A nonlinear prediction model for brms is defined in `bf()` the with model formula as first argument, parameters in the next line, and specifying that it is a nonlinear model with `nl=TRUE`. Here, `a~1, h~1` just means that these parameters are not depending on other predictors, i.e. fitting these parameters as is.
 
 ```{r}
 FR.formula = bf( NE ~ a*N0/(1.0+a*h*N0)*7,
@@ -59,7 +60,8 @@ FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
 ```{r}
 #| echo: false
 #| output: false
-fit.1 = readRDS(file="fit1.rds")
+# fit.1 = readRDS(file=here::here("fit1.rds"))
+fit.1 = readRDS(file=("fit1.rds"))
 expose_functions(fit.1, vectorize=TRUE)
 ```
 

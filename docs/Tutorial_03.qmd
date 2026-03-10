@@ -16,7 +16,13 @@ rm(list=ls())
 library(BayesFR)
 ```
 
-Using an example of fitting a type 2 vs. a type 3 FR, this section describes tools for model checking (Does the model describe the data well?), model comparison (Which model describes the data better?), and hypothesis testing (How certain is the model about research statements?). The dataset is from [Sentis et al. (2017)](https://doi.org/10.1111/gcb.13560), was made available in the FoRAGE database ([Uiterwaal et al. 2022](https://doi.org/10.1002/ecy.3706)), and contains three aquatic insect larvae predators feeding on Daphnia prey in two temperature treatments. Eaten prey were not replaced. We are using the predator *S. vulgatum* at 16°C.
+Using an example of fitting a type 2 vs. a type 3 FR, this section describes tools for 
+
+- model checking (Does the model describe the data well?) 
+- model comparison (Which model describes the data better?) 
+- and hypothesis testing (How certain is the model about research statements?) 
+
+The dataset is from [Sentis et al. (2017)](https://doi.org/10.1111/gcb.13560), was made available in the FoRAGE database ([Uiterwaal et al. 2022](https://doi.org/10.1002/ecy.3706)), and contains three aquatic insect larvae predators feeding on Daphnia prey in two temperature treatments. Eaten prey were not replaced. We are using the predator *S. vulgatum* at 16°C.
 
 ```{r}
 data(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY)
@@ -72,7 +78,7 @@ plot(conditional_effects(fit.type2),
      points=TRUE)
 ```
 
-The statistical model includes not only the deterministic regression, but we assumed that the data is Binomially distributed around these values. This can be specified to plot the **95% prediction intervals**, including also the **stochastic model part**. Note that the curve below looks a bit ragged, since these predictions are integer draws from the Binomial distribution now. The intervals should contain around 95% of the datapoints. In functional response experiments, however, the data is often more noisy than predicted by the Binomial distribution: it is overdispersed. We are not dealing with this right now, but do so later in another chapter.
+The statistical model includes not only the deterministic regression, but we assumed that the data is Binomially distributed around these values. This can be specified to plot the **95% prediction intervals**, including also the **stochastic model part**. Note that the curve below looks a bit ragged, since these predictions are integer draws from the Binomial distribution now. The intervals should contain around 95% of the datapoints. In functional response experiments, however, the data is often more noisy than predicted by the Binomial distribution: it is a bit overdispersed. We are not dealing with this right now, but the Beta Binomial distribution is described in a later tutorial on likelihood functions, if needed.
 
 ```{r}
 #| warning: false
@@ -152,7 +158,7 @@ The models are ranked by model performance: Here, the type 3 seems to be the bet
 
 ## Hypothesis testing
 
-While hypotheses can often be tested by comparing one model against the other as described above, we here will calculate posterior probabilities of model parameters using the a generalized type 3 response as an example.
+While hypotheses can often be tested by comparing one model against the other as described above, we here calculate posterior probabilities of model parameters using the a generalized type 3 response as an example.
 
 As an alternative to the classical type 2 and type 3 responses, a flexible exponent $q$ is used to make the attack rate $a=bN^q$ density dependent, which defines the functional response
 $$\frac{bN^{1+q}}{1+bhN^{1+q}}$$
