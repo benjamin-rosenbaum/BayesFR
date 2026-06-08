@@ -1,5 +1,5 @@
 # BayesFR package <img src="man/figures/BayesFR_hex.png" align="right" height="200"/>
-[![DOI](https://zenodo.org/badge/18940186.svg)](https://doi.org/10.5281/zenodo.18940186)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18940187.svg)](https://doi.org/10.5281/zenodo.18940187)
 
 ## Fitting functional responses in 1- and 2-prey systems
 
