@@ -7,12 +7,15 @@
 convert_2sp_to_long(df)
 }
 \arguments{
-\item{df}{data frame with first four columns named: N01, N02, NE1, NE2}
+\item{df}{data frame with at least these columns named: N01, N02, NE1, NE2}
 }
 \value{
 The transformed data frame
 }
 \description{
 brms requires univariate response values here. Transforms one row with
-bivariate (NE1,NE2) to two rows with NE=NE1 and NE=NE2, respectively.
+bivariate (NE1,NE2) to two rows with NE=NE1 and NE=NE2, respectively. Species
+identity of focal prey is saved in column ID, initial abundance of focal prey
+in column N0, and initial abundance of non-focal, alternative prey in column
+N0.alt
 }
