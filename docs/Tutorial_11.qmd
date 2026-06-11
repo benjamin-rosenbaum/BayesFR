@@ -10,9 +10,10 @@ format:
     toc-location: left
 ---
 
-Holling type 2 functional response, see e.g. [Rosenbaum et al. (2024)](https://doi.org/10.1111/2041-210X.14372)
+For feeding experiments with multiple prey species ($i=1,\dots,m$), feeding rates $F_i$ on a focal species $i$ are expected to decline in the presence of alternative prey $k$, see e.g. [Rosenbaum et al. (2024)](https://doi.org/10.1111/2041-210X.14372). We here use the multi-prey extension of the Holling type 2 functional response
 
 $$F_i(N_1, \dots, N_m)=\frac{a_iN_i}{1+\sum_{k=1}^ma_kh_kN_k}$$
+The BayesFR package is limited to 2-prey systems. Assuming eaten prey are not replaced during the feeding trial with initial prey densities $\left( \begin{smallmatrix} N_{1}(0)\\ N_{2}(0)\end{smallmatrix} \right)$, both prey densities $\left( \begin{smallmatrix} N_{1}(t)\\ N_{2}(t)\end{smallmatrix} \right)$ decline dynamically and interdependently in $t\in[0,T]$. We use the **coupled ODE system** 
 
 $$
 \begin{align}
@@ -21,25 +22,24 @@ $$
 \end{align}
 $$
 
+with fixed predator density $P$, which is numerically integrated to compute prey densities at the end of the experiment $\left( \begin{smallmatrix} N_{1}(T)\\ N_{2}(T)\end{smallmatrix} \right)$. Predictions of eaten prey are then given by $\left( \begin{smallmatrix} N_{1}(0)-N_{1}(T)\\ N_{2}(0)-N_2(T)\end{smallmatrix} \right)$, which are fitted to observed numbers of eaten prey $\left( \begin{smallmatrix}N_{E1}\\ N_{E2}\end{smallmatrix} \right)$.
+
 ## Dataset
+
+We use a dataset from [Colton (1897)](https://doi.org/10.2307/1938361), downloaded from [Novak & Stouffer (2020)](https://doi.org/10.6084/m9.figshare.12830792). Each row contains data from a single feeding trial, with numbers of offered $N_{01},N_{02}$ and of eaten prey $N_{E1},N_{E2}$ for both prey species.
 
 ```{r}
 #| warning: false
 library("BayesFR")
 library("ggplot2")
 library("cowplot")   # ggplot grids
-```
 
-Data from [Colton (1897)](https://doi.org/10.2307/1938361), downloaded from [Novak & Stouffer (2020)](https://doi.org/10.6084/m9.figshare.12830792)
-
-
-```{r}
 df.all = df_Colton_1987_1_ECOLOGY
 df.all$Time = df.all$Time/24 # convert units from hours to days
 head(df.all)
 ```
 
-experimental design (combinations of offered prey) full factorial grid, including single-prey experiments ($N_{01}=0$ or $N_{01}=0$) and multi-prey experiments ($N_{01},N_{02}>0$)
+The experimental design (combinations of offered prey) is a full factorial grid, including single-prey experiments ($N_{01}=0$ or $N_{02}=0$) and multi-prey experiments ($N_{01},N_{02}>0$).
 
 ```{r}
 ggplot(aes(N01,N02), data=df.all) +
@@ -47,7 +47,7 @@ ggplot(aes(N01,N02), data=df.all) +
   theme(aspect.ratio=1) 
 ```
 
-single-prey data species 1 vs species 2: 
+Plotting single-prey data only, **it looks like the predator consumes more of prey 1 than of prey 2.**
 
 ```{r}
 df.1 = subset(df.all, N02==0)
@@ -65,7 +65,7 @@ p2 = ggplot(aes(N02,NE2), data=df.2) +
 plot_grid(p1,p2)
 ```
 
-multi-prey data, proportion of eaten prey $\frac{N_{E1}}{N_{E1}+N_{E2}}$ (y-axis) vs proportion of offered prey $\frac{N_{01}}{N_{01}+N_{02}}$ (x-axis) shows preference for prey species 2. Points below 1-1-line indicate prey species 1 is consumed relatively less often than available in environment 
+We can visualize multi-prey data by plotting the  proportion of eaten prey $\frac{N_{E1}}{N_{E1}+N_{E2}}$ (y-axis) against the proportion of offered prey $\frac{N_{01}}{N_{01}+N_{02}}$ (x-axis) of prey species 1. Points below 1-1-line indicate prey species 1 is consumed relatively less often than available in environment. **In contrast to the single-prey data, the predator seems to have a preference for prey 2.** 
 
 ```{r}
 df.all$N01.ratio = df.all$N01/(df.all$N01+df.all$N02)
@@ -78,17 +78,25 @@ ggplot(aes(N01.ratio,NE1.ratio), data=df.all)+
   geom_segment(x=0, y=0, xend=1, yend=1, color="grey40", linetype="dashed") 
 ```
 
+We will fit the Holling type 2 multi-species FR to the whole dataset (single- and multi-prey data) to investigate this phenomenon.
+
 ## Model fitting
 
-Convert wide to long
+First, the data needs to be converted from "wide" to "long" format with the function `convert_2sp_to_long`. Each row is split up in two rows with relevant columns 
 
-Remove N0=0
+- `ID` focal prey ID (1 or 2)
+- `NE` number of eaten prey of focal prey
+- `N0` number of offered prey of focal prey
+- `N0.alt` number of offered prey of alternative prey
+
+This has purely technical reasons, since brms requires univariate model predictions. Predictions are still generated with the coupled ODE system, but with the "long" data format, predictions for each experiment are generated twice, once with output for `NE1` and once for `NE2`. Also, rows with `N0=0` are removed.
 
 ```{r}
 df = convert_2sp_to_long(df.all)
 str(df)
-head(df)
 ```
+
+To fit the Holling type 2 MSFR, the function `MS_Type2H_dyn` is used for prediction, which takes data arguments `N0,N0.alt,ID,P0,Time` and parameters `a1,a2,h1,h2`. Choosing a Binomial distribution (and specifying the identity link) with `N0` trials, the prediction model is divided by `N0` to compute probability of being eaten, just as in the single-prey models.
 
 ```{r}
 #| echo: FALSE
@@ -127,12 +135,13 @@ FR.priors  = c(prior(exponential(1), nlpar="a1", lb=0),
 )
 
 fit.1 = brm(FR.formula,
-            stanvars = stanvar(scode = MS_Type2H_dyn_code, 
-                               block = "functions"),
             family   = binomial(link="identity"),
             prior    = FR.priors,
             data     = df,
-            cores    = 4)
+            cores    = 4,
+            stanvars = stanvar(scode = MS_Type2H_dyn_code, 
+                               block = "functions")
+            )
 expose_functions(fit.1, vectorize = TRUE)
 ```
 
@@ -145,13 +154,28 @@ summary(fit.1)
 plot(fit.1)
 ```
 
-## Plotting
-
 ```{r}
 plot(pp_check(fit.1, ndraws=100))
 ```
 
-Single prey data
+## Model investigation
+
+
+Coming back to our **research question** (stronger feeding of prey 1 in single-prey experiments, but preference for prey 2 in multi-prey experiments), we check attack rates and handling times. Interestingly, $a_1<a_2$, which we verify by testing the posterior distribution of the difference: 
+
+```{r}
+hypothesis(fit.1, "a1_Intercept < a2_Intercept")
+```
+
+So how can single-prey feeding on prey 1 be stronger than on prey 2? This is purely driven by handling times $h_1<h_2$, or equivalently $\frac{1}{h_1}>\frac{1}{h_2}$, so maximum feeding rate $f_\max=\frac{1}{h}$ is higher for prey 1. The hypothesis function can also be used to compute difference in maximum feeding rates, which is 34.6 (95\% CI [25.7,44.9]).
+
+```{r}
+hypothesis(fit.1, "h1_Intercept < h2_Intercept")
+hypothesis(fit.1, "(1/h1_Intercept) > (1/h2_Intercept)")
+```
+
+
+Plotting single-prey data against model predictions again shows how the difference in eaten prey is driven by higher maximum feeding rate on prey 1. 
 
 ```{r}
 #| warning: FALSE
@@ -185,6 +209,8 @@ p2 = p2[[1]] + geom_point(data = df.plot,
 
 plot_grid(p1,p2)
 ```
+
+Plotting the whole dataset (single- and multi-prey feeding) shows, however, that feeding rate on prey 1 sharply declines in the presence of prey two (green and red curves in left figure), while feeding rate on prey 2 just weakly declines in the presence of prey 1 (right figure). This is driven by $a_2>a_1$. 
 
 ```{r}
 #| warning: FALSE
@@ -221,6 +247,8 @@ p2 = p2[[1]] + geom_point(data = df.plot,
 plot_grid(p1,p2)
 ```
 
+Realized preference (ratio of eaten prey vs ratio of offered prey) can be predicted as well. Posterior predictions for `NE1` and `NE2` are generated using `posterior_epred`, along a gradient of offered prey ratio (while keeping total number of offered prey constant), to compute posterior ratios of eaten prey.
+
 ```{r}
 #| warning: FALSE
 # choose level of total prey abundance (constant)
@@ -242,7 +270,7 @@ post.1 = posterior_epred(fit.1, newdata=df.pred.1)
 post.2 = posterior_epred(fit.1, newdata=df.pred.2)
 post.ratio = post.1/(post.1+post.2)
 
-# posterior means and credible intervals
+# posterior ratio means and credible intervals
 df.pred$mean  = colMeans(post.ratio)
 df.pred$upper = apply(post.ratio, 2, quantile, probs = 0.975)
 df.pred$lower = apply(post.ratio, 2, quantile, probs = 0.025)
@@ -257,3 +285,6 @@ ggplot(df.all, aes(x=N01.ratio, y=NE1.ratio)) +
   theme(aspect.ratio = 1) 
 ```
 
+Here, a preference for prey 2 shows. 
+
+# Alternative MSFR models

@@ -43,7 +43,7 @@ install_github("benjamin-rosenbaum/BayesFR")
 8. [Predator interference](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_08.html)
 9. [Likelihood functions and response distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_09.html)
 10. [Prior distributions](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_10.html)
-- Multi-species functional responses (coming soon!)
+11. [Multi-species functional responses](https://benjamin-rosenbaum.github.io/BayesFR/Tutorial_11.html)
 
 ## Example 
 
