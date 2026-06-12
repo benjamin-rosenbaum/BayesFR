@@ -2,8 +2,8 @@
 #'
 #' Contains Stan function of the same name as character string. Uses numerical
 #' solution of the 2-prey ODE
-#' \deqn{\frac{dN_1}{dt}=-\frac{w_1b_1N_1^(1+q+r)}{(w_1N_1^r+(1-w_1)N_2^r)+w_1b_1h_1N_1^(1+q+r)+(1-w_1)b_2h_2N_2^(1+q+r)}P}{dN1/dt=-w1b1N1^(1+q+r) P/((w1N1^r+(1+w1)N2^r)+w1b1h1N1^(1+q+r)+(1-w1)b2h2N2^(1+q+r)))}
-#' \deqn{\frac{dN_2}{dt}=-\frac{(1-w_1)b_2N_2^(1+q+r)}{(w_1N_1^r+(1-w_1)N_2^r)+w_1b_1h_1N_1^(1+r)+(1-w_1)b_2h_2N_2^(1+q+r)}P}{dN2/dt=-w1b2N2^(1+q+r) P/((w1N1^r+(1+w1)N2^r)+w1b1h1N1^(1+q+r)+(1-w1)b2h2N2^(1+q+r)))}
+#' \deqn{\frac{dN_1}{dt}=-\frac{w_1b_1N_1^{(1+q+r)}}{(w_1N_1^r+(1-w_1)N_2^r)+w_1b_1h_1N_1^{(1+q+r)}+(1-w_1)b_2h_2N_2^{(1+q+r)}}P}{dN1/dt=-w1b1N1^(1+q+r) P/((w1N1^r+(1+w1)N2^r)+w1b1h1N1^(1+q+r)+(1-w1)b2h2N2^(1+q+r)))}
+#' \deqn{\frac{dN_2}{dt}=-\frac{(1-w_1)b_2N_2^{(1+q+r)}}{(w_1N_1^r+(1-w_1)N_2^r)+w_1b_1h_1N_1^{(1+q+r)}+(1-w_1)b_2h_2N_2^{(1+q+r)}}P}{dN2/dt=-w1b2N2^(1+q+r) P/((w1N1^r+(1+w1)N2^r)+w1b1h1N1^(1+q+r)+(1-w1)b2h2N2^(1+q+r)))}
 #' to compute number of eaten prey.
 #'
 #' Usage in brms formula:\cr\cr
