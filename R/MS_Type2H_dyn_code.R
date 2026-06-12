@@ -1,4 +1,4 @@
-#' Type 2 multi-species FR without replament
+#' Type 2 multi-species FR without replacement
 #' 
 #' Contains Stan function of the same name as character string. Uses numerical
 #' solution of the 2-prey ODE
