@@ -18,14 +18,14 @@ to compute number of eaten prey.
 }
 \details{
 Usage in brms formula:\cr\cr
-\verb{~ MS_TypeZ_dyn(N0, N0.alt, ID, P, Time, b1, b2, h1, h2, w1, q r)}\cr\cr
+\verb{~ MS_TypeZ_dyn(N0, N0.alt, ID, P, Time, b1, b2, h1, h2, w1, q, r)}\cr\cr
 \verb{N0    } initial number of focal prey species \cr
 \verb{N0.alt} initial number of alternative prey species \cr
 \verb{ID    } ID of focal species (1 or 2) \cr
 \verb{P     } number of predators \cr
 \verb{Time  } duration of the experiment \cr
-\verb{b1    } attack rate for prey species 1 \cr
-\verb{b2    } attack rate for prey species 2 \cr
+\verb{b1    } attack coefficient for prey species 1 \cr
+\verb{b2    } attack coefficient for prey species 2 \cr
 \verb{h1    } handling time for prey species 1 \cr
 \verb{h2    } handling time for prey species 2 \cr
 \verb{w1    } preference weight for species 1 in multi-prey \cr
