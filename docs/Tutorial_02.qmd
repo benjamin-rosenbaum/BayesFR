@@ -11,7 +11,7 @@ rm(list=ls())
 library(BayesFR)
 ```
 
-We load a dataset which is included in this package. It is originally from [Hossie 
+This dataset is originally from [Hossie 
 and Murray (2010)](https://doi.org/10.1007/s00442-010-1568-6) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. Here, we will regress number of eaten prey $N_E$ against initial prey abundance $N_0$. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
 
 ```{r}
@@ -23,11 +23,11 @@ ggplot(aes(N0,NE), data=df) +
   coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
 ```
 
-We want to estimate a type 3 functional response, which has a density-dependent attack rate $a=bN$, and is parameterized with attack rate coeffient $b$ and handling time $h$. Since eaten prey were not replaced, we cannot directly fit the type 3 functional response 
+We intend to estimate a type 3 functional response, which has a density-dependent attack rate $a=bN$, and is parameterized with attack rate coeffient $b$ and handling time $h$. Since eaten prey were not replaced (and number of available prey is not constant), we cannot directly fit the type 3 functional response 
 $$ F(N) = \frac{bN^2}{1+bhN^2}PT$$
 to the observed data. Instead, prey abundance is modeled dynamically by the differential equation 
  $$ \frac{dN}{dt} = -\frac{bN^2}{1+bhN^2}P, \quad N(t=0)=N_0$$
-With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented. (An alternative parameterization $\frac{f_\max N^2}{N_\text{half}^2+N^2}$ using maximum feeding rate and handling time is presented in the priors tutorial.)
+With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented. An alternative parameterization $\frac{f_\max N^2}{N_\text{half}^2+N^2}$ using maximum feeding rate and half-saturation density is presented in the priors tutorial.
 
 
 Then, we still need to define a likelihood function for model fitting. Observed numbers of eaten prey are integers bounded between $0$ and $N_0$, because the predator cannot eat more than the initial abundance. This makes the Binomial distribution 
@@ -45,8 +45,7 @@ For the Binomial distribution, the number of trials `N0` is specified, and the s
 As in the previous example, we choose some very weakly informative priors, the lower boundary `lb=0` is required to keep parameters non-negative.
 ```{r}
 FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
-               prior(exponential(1.0), nlpar="h", lb=0)
-)
+               prior(exponential(1.0), nlpar="h", lb=0))
 ```
 
 ```{r}

@@ -1,0 +1,207 @@
+---
+title: "Getting started with BayesFR"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+  pdf_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Getting started with BayesFR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 5,
+  fig.height = 4
+)
+```
+
+Easy application of Bayesian inference for functional responses via brms.
+
+This package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.
+
+The BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.
+
+```{r, eval=FALSE}
+# Example code for fitting a Type 3 FR dynamical model:
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,P0,Time,b,h)/N0,
+                 b~1, h~1, nl=TRUE)
+FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0) )
+fit.1      = brm(FR.formula,
+                 family   = binomial(link="identity"),
+                 prior    = FR.priors,
+                 stanvars = stanvar(scode=Type3H_dyn_code, block="functions"),
+                 data     = df )
+```
+
+
+## Minimal example: data with prey replacement
+
+The first dataset is originally from [Michalko and Pekar (2017)](https://doi.org/10.1086/690501) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It contains experiments with a spider feeding on a pear psylla pest. With feeding trial data, we want to regress number of eaten prey $N_E$ against offered prey abundance $N_0$. All experiments were run for 7 hours and prey abundance $N_0$ was kept constant by replacing eaten prey.
+
+```{r}
+library(BayesFR)
+data(df_Michalko_and_Pekar_2017_AM_NAT)
+df = subset(df_Michalko_and_Pekar_2017_AM_NAT, ID=="Figure 3c")
+head(df)
+ggplot(aes(N0,NE), data=df) +
+  geom_jitter(width=0.1, height=0.1, alpha=0.6, size=2) +
+  coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
+```
+
+We want to estimate a type 2 functional response, parameterized by attack rate $a$ and handling time $h$. Since there was no prey depletion, we can directly fit the per-capita feeding rate, multiplied by predator abundance $P$ and experimental duration $T$ to the observed data.
+
+$$ F(N) = \frac{aN}{1+ahN}PT$$
+An alternative parameterization $\frac{f_\max N}{N_\text{half}+N}$ using maximum feeding rate and half-saturation density is presented in the priors tutorial.
+
+Additional to this deterministic prediction model, we need to specify how we assume the observed data to be distributed around the model predictions, this defines the likelihood function. Observed data $N_E$ are non-negative integers and theoretically do not have an upper boundary (since eaten prey are constantly replaced). Hence we can use the Poisson distribution (or, alternatively, the Negative Binomial for overdispersed data)
+
+
+$$ N_E \sim \text{Poisson} \left( F\left(N_0\right) \right)$$
+A nonlinear prediction model for brms is defined in `bf()` the with model formula as first argument, parameters in the next line, and specifying that it is a nonlinear model with `nl=TRUE`. Here, `a~1, h~1` just means that these parameters are not depending on other predictors, i.e. fitting these parameters as is.
+
+```{r}
+FR.formula = bf( NE ~ a*N0/(1.0+a*h*N0)*Time,
+                 a~1, h~1, 
+                 nl = TRUE)
+```
+
+Other prediction models cannot be defined in just a single line of code. This package contains Stan code for them, which can be fed into brms. The following formulation is identical to the one above, with a function `Type2H_fix()` coded in `Type2H_fix_code` (which is used later in the brms call). A helpfile is available with `?Type2H_fix_code`. The function `Type2H_fix()` requires abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `a` and `h` as arguments, in that exact order. Here, fixed values are provided for `P0=1.0` and `Time=7.0`, but these can also be columns in the data.
+
+```{r}
+FR.formula = bf( NE ~ Type2H_fix(N0,1.0,7.0,a,h),
+                 a~1, h~1, 
+                 nl = TRUE)
+```
+
+Note that attack rates and handling time are estimated per capita and per unit of time. Here, by specifying experimental duration as `Time=7.0`, attack rates are per hour, and handling time is in hours. Alternatively, if parameters should be estimated in days, `Time=7.0/24.0` will do. Note that time should be expressed as real values and not as integers, otherwise brms will misinterpret `7/24` as an integer operation. 
+
+The parameters' units are important for the prior definition. Here, we just choose some weakly informative exponential distributions with a mean of 1, each. A prior is required for these non-negative parameters and a lower boundary must be specified with `lb=0`. More information on priors is provided in the dedicated tutorial. 
+
+```{r}
+FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0))
+```
+
+Finally, we run the model calling `brm()` with the model formula as the first argument. The Poisson distribution is specified in `family`, and it is necessary to use the identity-link to overwrite the default log-link (which is not required because model predictions are already positive). The model function `Type2H_fix` is provided by this package's `Type2H_fix_code` in `stanvars`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+fit.1 = brm(FR.formula,
+            family   = poisson(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            # cores    = 4, # parallel computation of chains
+            stanvars = stanvar(scode = Type2H_fix_code, block = "functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+The summary table gives us some infos on the fitted model. In Bayesian statistics, we first have to check for **convergence** of the MCMC. Here, the `Rhat` column quantifies how well the chains have mixed, and a value <1.01 is aspired. 
+
+```{r}
+summary(fit.1)
+```
+
+Additionally, a traceplot of the chains is helpful. If the plots in the right column look like fuzzy caterpillars, everything is fine. 
+
+```{r}
+plot(fit.1)
+```
+
+Our model estimated an attack rate mean of 0.64 [1/hour], and a handling time mean of 0.70 [hour], as also shown in the histograms of the posterior distribution in the left column above. 
+
+Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
+
+```{r, message=FALSE, warning=FALSE}
+plot(conditional_effects(fit.1), points=TRUE)
+```
+
+The plot can be modified, for example using predictions starting in `N0=0`. Additionally, ggplot parameters can be specified in `point_args`. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
+
+```{r, message=FALSE, warning=FALSE}
+plot(conditional_effects(fit.1, 
+                         effects="N0",
+                         int_conditions=data.frame(N0=seq(0,12,length.out=100))), 
+     points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2))
+```
+
+
+
+## Minimal example: data without prey replacement
+
+This dataset is originally from [Hossie 
+and Murray (2010)](https://doi.org/10.1007/s00442-010-1568-6) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. Here, we will regress number of eaten prey $N_E$ against initial prey abundance $N_0$. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
+
+```{r}
+data(df_Hossie_and_Murray_2010_OECOLOGIA)
+df = subset(df_Hossie_and_Murray_2010_OECOLOGIA, ID=="Figure 1e")
+head(df)
+ggplot(aes(N0,NE), data=df) +
+  geom_jitter(width=0.1, height=0.0, alpha=0.6, size=2) +
+  coord_cartesian(xlim=c(0,NA), ylim=c(0,NA))
+```
+
+We intend to estimate a type 3 functional response, which has a density-dependent attack rate $a=bN$, and is parameterized with attack rate coeffient $b$ and handling time $h$. Since eaten prey were not replaced (and number of available prey is not constant), we cannot directly fit the type 3 functional response 
+$$ F(N) = \frac{bN^2}{1+bhN^2}PT$$
+to the observed data. Instead, prey abundance is modeled dynamically by the differential equation 
+ $$ \frac{dN}{dt} = -\frac{bN^2}{1+bhN^2}P, \quad N(t=0)=N_0$$
+With its solution in the interval $t=[0,T]$, the final number of prey $N(t=T)=N_T$ is used to compute predictions $\hat{N}_E=N_0-N_T$. Analytical solutions exist for the type 2 FR (LambertW formula) and the type 3 FR (quadratic equation), which are used in this package. For other functional responses, such as the generalized type 3 FR with a flexible exponent $q$, a numerical solution of the corresponding differential equation is implemented. An alternative parameterization $\frac{f_\max N^2}{N_\text{half}^2+N^2}$ using maximum feeding rate and half-saturation density is presented in the priors tutorial.
+
+
+Then, we still need to define a likelihood function for model fitting. Observed numbers of eaten prey are integers bounded between $0$ and $N_0$, because the predator cannot eat more than the initial abundance. This makes the Binomial distribution 
+$$N_E\sim\text{Binomial}\left(n,\ p\right)$$ 
+with $n=N_0$ trials and individual prey probability of being eaten $p=\frac{N_0-N_T}{N_0}$ an obvious choice. Alternatively, the Beta Binomial distribution for overdispersed data is discussed in the tutorial on likelihood functions. 
+
+The dynamical prediction model is defined by the function `Type3H_dyn()` and coded in `Type3H_dyn_code` (which is used later in the brms call). It computes number of eaten prey based on these arguments: abundance of offered prey `N0`, predator abundance `P0`, experimental duration `Time`, and parameters `b` and `h`, in that exact order. We define the brms formula:
+```{r}
+FR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,1.0,1.0,b,h)/N0,
+                 b~1, h~1,
+                 nl = TRUE)
+```
+For the Binomial distribution, the number of trials `N0` is specified, and the success probability must be computed by dividing predicted number of eaten `Type3H_dyn()` by number of trials `N0`. Here, we provided fixed values for `P0=1.0` and `Time=1.0` [day], which means parameters are also estimated in [day]. 
+
+As in the previous example, we choose some very weakly informative priors, the lower boundary `lb=0` is required to keep parameters non-negative.
+```{r}
+FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
+               prior(exponential(1.0), nlpar="h", lb=0))
+```
+
+We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the identity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1). `stanvars` contains this package's code for the prediction model `Type3H_dyn_code`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+fit.1 = brm(FR.formula,
+            family   = binomial(link="identity"),
+            prior    = FR.priors,
+            data     = df,
+            # cores    = 4, # parallel computation of chains
+            stanvars = stanvar(scode=Type3H_dyn_code, block="functions")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+We check the summary table and the traceplots for MCMC convergence (`Rhat` values <1.01 and good mixing of the chains):
+
+```{r}
+summary(fit.1)
+plot(fit.1)
+```
+
+Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
+
+```{r, message=FALSE, warning=FALSE}
+plot(conditional_effects(fit.1), points=TRUE)
+```
+
+The plot can be modified to show the sigmoidal shape of the type 3 FR at low abundances. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
+
+```{r, message=FALSE, warning=FALSE}
+plot(conditional_effects(fit.1, 
+                         effects="N0", 
+                         int_conditions=data.frame(N0=1:60)), 
+     points=TRUE, point_args=list(width=0.1, alpha=0.6, size=2))
+```
