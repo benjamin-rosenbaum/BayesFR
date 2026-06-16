@@ -93,7 +93,14 @@ FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
 
 Finally, we run the model calling `brm()` with the model formula as the first argument. The Poisson distribution is specified in `family`, and it is necessary to use the identity-link to overwrite the default log-link (which is not required because model predictions are already positive). The model function `Type2H_fix` is provided by this package's `Type2H_fix_code` in `stanvars`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
 
-```{r, message=FALSE, warning=FALSE, results='hide'}
+```{r, echo=FALSE, output=FALSE}
+fit.1 = readRDS(
+    system.file("extdata", "Tutorial_01_fit1.rds", package = "BayesFR")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r, eval=FALSE}
 fit.1 = brm(FR.formula,
             family   = poisson(link="identity"),
             prior    = FR.priors,
@@ -176,7 +183,14 @@ FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
 
 We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the identity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1). `stanvars` contains this package's code for the prediction model `Type3H_dyn_code`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
 
-```{r, message=FALSE, warning=FALSE, results='hide'}
+```{r, echo=FALSE, output=FALSE}
+fit.1 = readRDS(
+    system.file("extdata", "Tutorial_02_fit1.rds", package = "BayesFR")
+)
+expose_functions(fit.1, vectorize=TRUE)
+```
+
+```{r, eval=FALSE}
 fit.1 = brm(FR.formula,
             family   = binomial(link="identity"),
             prior    = FR.priors,
