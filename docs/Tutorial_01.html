@@ -276,7 +276,9 @@ window.Quarto = {
 
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(BayesFR)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(BayesFR)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The first dataset is originally from <a href="https://doi.org/10.1086/690501">Michalko and Pekar (2017)</a> and was made available in the FoRAGE database <a href="https://doi.org/10.5063/F1RX99KB">(Uiterwaal et al.&nbsp;2022)</a>. It contains experiments with a spider feeding on a pear psylla pest. With feeding trial data, we want to regress number of eaten prey <span class="math inline">\(N_E\)</span> against offered prey abundance <span class="math inline">\(N_0\)</span>. All experiments were run for 7 hours and prey abundance <span class="math inline">\(N_0\)</span> was kept constant by replacing eaten prey.</p>
 <div class="cell">

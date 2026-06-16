@@ -291,9 +291,10 @@ window.Quarto = {
 
 
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"BayesFR"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"ggplot2"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"cowplot"</span>) <span class="co"># ggplot grids</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(BayesFR)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot) <span class="co"># ggplot grids</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A statistical model consists of at least 2 parts: a deterministic prediction model, and a stochastic part (distributional model) that connects the observations with the predictions. Together, they define the likelihood function of a statistical model. So far, we assumed the observed number of eaten prey were Poisson distributed (integer, lower bound <span class="math inline">\(0\)</span>) in case of prey replacement, or Binomial distributed (integer, bounded between <span class="math inline">\(0\)</span> and <span class="math inline">\(N_0\)</span>) in experiments without prey replacement.</p>
 <p>We have to check if the statistical model is appropriate, i.e.&nbsp;predictions respect boundedness, variation and dispersion (mean-variance scaling) of the data. Posterior predictive checks are performed with the functions <code>pp_check()</code> and <code>conditional_effects(method="posterior_predict")</code>. In case predictions deviate in one or more of these aspects from the data, brms offers many distributions to choose from. Here, we look at 2 examples with possible solutions to (1) overdispersion, and (2) non-integer observations.</p>
@@ -715,24 +716,24 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df.pred)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      Estimate Est.Error         Q2.5     Q97.5
-[1,] 0.4350802 0.4660713 5.339900e-27 1.0000000
-[2,] 0.4245423 0.4398271 6.635105e-14 1.0000000
-[3,] 0.4217352 0.4229229 2.120283e-09 0.9999976
-[4,] 0.4277862 0.4080004 9.026684e-08 0.9999785
-[5,] 0.4207458 0.3858262 3.563788e-06 0.9995788
-[6,] 0.4075910 0.3711338 1.893680e-05 0.9987244</code></pre>
+[1,] 0.4179646 0.4635629 5.105811e-28 1.0000000
+[2,] 0.4281897 0.4407115 2.231074e-14 1.0000000
+[3,] 0.4210237 0.4210784 3.416557e-10 0.9999984
+[4,] 0.4147837 0.4025385 1.308634e-07 0.9999673
+[5,] 0.4115111 0.3796708 4.575410e-06 0.9996767
+[6,] 0.4061608 0.3661163 1.522084e-05 0.9990468</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>df.pred <span class="ot">=</span> df.pred<span class="sc">*</span>df.new<span class="sc">$</span>N0</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>df.pred <span class="ot">=</span> <span class="fu">cbind</span>(df.pred, df.new)</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df.pred)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Estimate Est.Error         Q2.5    Q97.5 N0
-1 0.4350802 0.4660713 5.339900e-27 1.000000  1
-2 0.8490845 0.8796542 1.327021e-13 2.000000  2
-3 1.2652056 1.2687686 6.360848e-09 2.999993  3
-4 1.7111446 1.6320014 3.610674e-07 3.999914  4
-5 2.1037291 1.9291312 1.781894e-05 4.997894  5
-6 2.4455461 2.2268029 1.136208e-04 5.992347  6</code></pre>
+1 0.4179646 0.4635629 5.105811e-28 1.000000  1
+2 0.8563794 0.8814229 4.462147e-14 2.000000  2
+3 1.2630710 1.2632351 1.024967e-09 2.999995  3
+4 1.6591346 1.6101541 5.234536e-07 3.999869  4
+5 2.0575557 1.8983541 2.287705e-05 4.998383  5
+6 2.4369651 2.1966980 9.132507e-05 5.994281  6</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">=</span> <span class="fu">ggplot</span>(df.trunc, <span class="fu">aes</span>(N0, NE)) <span class="sc">+</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha=</span><span class="fl">0.6</span>, <span class="at">size=</span><span class="dv">2</span>) <span class="sc">+</span></span>

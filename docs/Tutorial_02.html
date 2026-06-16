@@ -276,7 +276,9 @@ window.Quarto = {
 
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(BayesFR)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(BayesFR)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This dataset is originally from <a href="https://doi.org/10.1007/s00442-010-1568-6">Hossie and Murray (2010)</a> and was made available in the FoRAGE database <a href="https://doi.org/10.5063/F1RX99KB">(Uiterwaal et al.&nbsp;2022)</a>. It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. Here, we will regress number of eaten prey <span class="math inline">\(N_E\)</span> against initial prey abundance <span class="math inline">\(N_0\)</span>. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.</p>
 <div class="cell">

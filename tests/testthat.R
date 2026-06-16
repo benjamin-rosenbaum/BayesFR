@@ -8,5 +8,7 @@
 
 library(testthat)
 library(BayesFR)
+library(brms)
+library(ggplot2)
 
 test_check("BayesFR")
