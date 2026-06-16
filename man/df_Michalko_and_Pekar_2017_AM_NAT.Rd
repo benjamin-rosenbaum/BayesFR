@@ -17,13 +17,13 @@ A data frame with 63 rows and 6 variables:
 }
 \source{
 Michalko R. and Pekar S. (2017).
-\emph{The Behavioral Type of a Top Predator Drives the Short-Term Dynamic of Intraguild Predation.}
-American Naturalist, 189, 242-253.
+The Behavioral Type of a Top Predator Drives the Short-Term Dynamic of Intraguild Predation.
+\emph{American Naturalist}, 189, 242-253.
 https://doi.org/10.1086/690501
 
 Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022).
-\emph{FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.}
-Ecology 103(7): e3706.
+FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.
+\emph{Ecology} 103(7): e3706.
 https://doi.org/10.1002/ecy.3706
 
 FoRAGE database V5 (2024).

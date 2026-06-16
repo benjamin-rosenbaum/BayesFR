@@ -1,6 +1,6 @@
 #' Example dataset for random effects (predator individual)
 #'
-#' Feeding experiment data from Schröder et al. (2016) were downloaded from
+#' Feeding experiment data from Schr??der et al. (2016) were downloaded from
 #' Figshare (Kalinkat et al. 2025) under CC BY 4.0. Eaten prey were not replaced during the
 #' experiments (2 minutes). Includes data for least killifish (Heterandria formosa, 49 individuals)
 #' feeding on nauplii (Artemia salina). Predator individuals were re-used and predator
@@ -20,13 +20,13 @@
 #'
 #' @source
 #'   Schröder A., Kalinkat G. & Arlinghaus R. (2016).
-#'   *Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.*
-#'   Oecologia, 88:1670–1683.
+#'   Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.
+#'   *Oecologia*, 88:1670???1683.
 #'   https://doi.org/10.1007/s00442-016-3701-7
 #'
 #'   Kalinkat G., Schröder A. & Arlinghaus R. (2025).
-#'   *Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.*
-#'   Figshare.
+#'   Individual variation in functional response parameters is explained by body size but not by behavioural types in a poeciliid fish.
+#'   *Figshare*.
 #'   https://doi.org/10.6084/m9.figshare.24665880
 #'
 #' @usage data(df_Schroeder_et_al_2016_OEC)

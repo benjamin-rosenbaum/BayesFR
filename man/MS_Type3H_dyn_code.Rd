@@ -14,7 +14,7 @@ Contains Stan function of the same name as character string. Uses numerical
 solution of the 2-prey ODE
 \deqn{\frac{dN_1}{dt}=-\frac{b_1N_1^{1+q}}{1+b_1h_1N_1^{1+q}+b_2h_2N_2^{1+q}}P}{dN1/dt=-b1N1^(1+q) P/(1+b1h1N1^(1+q)+b2h2N2^(1+q)))}
 \deqn{\frac{dN_2}{dt}=-\frac{b_2N_2^{1+q}}{1+b_1h_1N_1^{1+q}+b_2h_2N_2^{1+q}}P}{dN2/dt=-b2N2^(1+q) P/(1+b1h1N1^(1+q)+b2h2N2^(1+q)))}
-to compute number of eaten prey.
+to compute number of eaten prey, see Rosenbaum et al. (2024).
 }
 \details{
 Usage in brms formula:\cr\cr
@@ -33,4 +33,11 @@ Usage in brms formula:\cr\cr
 Requires the data to be in a specific "long" format. Use the function
 \verb{convert_2sp_to_long()} to transform from a dataframe with columns
 N01, N02, NE1, NE2
+}
+\references{
+Rosenbaum, B., Li, J., Hirt, M. R., Ryser, R., & Brose, U. (2024).
+Towards understanding interactions in a complex world: Design and analysis of
+multi-species functional response experiments.
+\emph{Methods in Ecology and Evolution,} 15, 1704-1719.
+https://doi.org/10.1111/2041-210X.14372
 }

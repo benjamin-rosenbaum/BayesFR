@@ -2,7 +2,7 @@
 #'
 #' Feeding experiment data from Colton (1987) were downloaded from
 #' Figshare (Novak & Stouffer 2020). Eaten prey were not replaced during the
-#' experiment. Includes data for 10th—instar naiads of a damselfly feeding on a
+#' experiment. Includes data for 10th???instar naiads of a damselfly feeding on a
 #' cladoceran (Simocephalus serrulatus, species 1) and a copepod (Diaptomus
 #' spatulocrenatus, species 2).
 #'
@@ -20,13 +20,13 @@
 #'
 #' @source
 #'   Colton, T.F. (1987).
-#'   *Extending functional response models to include a second prey type: an experimental test.*
-#'   Ecology, 68: 900-912.
+#'   Extending functional response models to include a second prey type: an experimental test.
+#'   *Ecology*, 68: 900-912.
 #'   https://doi.org/10.2307/1938361
 #'
 #'   Novak, M., & Stouffer, D. (2020).
-#'   *Data extracted for "Hidden layers of density dependence in consumer feeding rates."*
-#'   Figshare.
+#'   Data extracted for "Hidden layers of density dependence in consumer feeding rates."
+#'   *Figshare*.
 #'   https://doi.org/10.6084/m9.figshare.12830792
 #'
 #'

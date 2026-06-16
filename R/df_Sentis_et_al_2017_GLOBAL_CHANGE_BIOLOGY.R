@@ -18,13 +18,13 @@
 #'
 #' @source
 #'   Sentis A., Gemard C., Jaugeon B., and Boukal D. S. (2017).
-#'   *Predator diversity and environmental change modify the strengths of trophic and nontrophic interactions.*
-#'   Global Change Biology, 23: 2629-2640.
+#'   Predator diversity and environmental change modify the strengths of trophic and nontrophic interactions.
+#'   *Global Change Biology*, 23: 2629-2640.
 #'   https://doi.org/10.1111/gcb.13560
 #'
 #'   Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022).
-#'   *FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.*
-#'   Ecology 103(7): e3706.
+#'   FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.
+#'   *Ecology* 103(7): e3706.
 #'   https://doi.org/10.1002/ecy.3706
 #'
 #'   FoRAGE database V5 (2024).

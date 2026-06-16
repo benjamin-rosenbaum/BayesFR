@@ -17,13 +17,13 @@ A data frame with 91 rows and 6 variables:
 }
 \source{
 Hossie T. J. and Murray D. S. (2010).
-\emph{You can't run but you can hide: refuge use in frog tadpoles elicits density-dependent predation by dragonfly larvae.}
-Oecologia, 163, 395–404.
+You can't run but you can hide: refuge use in frog tadpoles elicits density-dependent predation by dragonfly larvae.
+\emph{Oecologia}, 163, 395-404.
 https://doi.org/10.1007/s00442-010-1568-6
 
 Uiterwaal S. F., Lagerstrom I. T., Lyon S. R., and DeLong, J. P. (2022).
-\emph{FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.}
-Ecology 103(7): e3706.
+FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids.
+\emph{Ecology} 103(7): e3706.
 https://doi.org/10.1002/ecy.3706
 
 FoRAGE database V5 (2024).

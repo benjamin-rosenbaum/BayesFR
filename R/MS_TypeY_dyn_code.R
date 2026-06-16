@@ -4,7 +4,7 @@
 #' solution of the 2-prey ODE
 #' \deqn{\frac{dN_1}{dt}=-\frac{w_1a_1N_1^{1+r}}{(w_1N_1^r+(1-w_1)N_2^r)+w_1a_1h_1N_1^{1+r}+(1-w_1)a_2h_2N_2^{1+r}}P}{dN1/dt=-w1a1N1^(1+r) P/((w1N1^r+(1+w1)N2^r)+w1a1h1N1^(1+r)+(1-w1)a2h2N2^(1+r)))}
 #' \deqn{\frac{dN_2}{dt}=-\frac{(1-w_1)a_2N_2^{1+r}}{(w_1N_1^r+(1-w_1)N_2^r)+w_1a_1h_1N_1^{1+r}+(1-w_1)a_2h_2N_2^{1+r}}P}{dN2/dt=-w1a2N2^(1+r) P/((w1N1^r+(1+w1)N2^r)+w1a1h1N1^(1+r)+(1-w1)a2h2N2^(1+r)))}
-#' to compute number of eaten prey.
+#' to compute number of eaten prey, see Rosenbaum et al. (2024).
 #'
 #' Usage in brms formula:\cr\cr
 #' \verb{~ MS_TypeY_dyn(N0, N0.alt, ID, P, Time, a1, a2, h1, h2, w1, r)}\cr\cr
@@ -23,6 +23,12 @@
 #' Requires the data to be in a specific "long" format. Use the function
 #' \verb{convert_2sp_to_long()} to transform from a dataframe with columns
 #' N01, N02, NE1, NE2
+#' 
+#' @references Rosenbaum, B., Li, J., Hirt, M. R., Ryser, R., & Brose, U. (2024). 
+#' Towards understanding interactions in a complex world: Design and analysis of 
+#' multi-species functional response experiments. 
+#' *Methods in Ecology and Evolution,* 15, 1704-1719. 
+#' https://doi.org/10.1111/2041-210X.14372
 
 #' @return Number of eaten prey
 #' @export

@@ -20,14 +20,14 @@
 #' @source
 #'   Papanikolaou N.E., Dervisoglou S., Fantinou A., Kypraios T., Giakoumaki V.,
 #'   Perdikis D. (2021a).
-#'   *Predator size affects the intensity of mutual interference in a predatory mirid.*
-#'   Ecology and Evolution 2021(11): 1342–1351.
+#'   Predator size affects the intensity of mutual interference in a predatory mirid.
+#'   *Ecology and Evolution* 2021(11): 1342???1351.
 #'   https://doi.org/10.1002/ece3.7137
 #'
 #'   Papanikolaou N.E., Dervisoglou S., Fantinou A., Kypraios T., Giakoumaki V.,
 #'   Perdikis D. (2021b).
-#'   *Data from: Predator size affects the intensity of mutual interference in a predatory mirid.*
-#'   Dryad
+#'   Data from: Predator size affects the intensity of mutual interference in a predatory mirid.
+#'   *Dryad*
 #'   https://doi.org/10.5061/dryad.2ngf1vhmj
 #'
 #' @usage data(df_Papanikolaou_et_al_2021_ECOL_EVOL)

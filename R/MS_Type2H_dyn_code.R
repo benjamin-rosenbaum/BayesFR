@@ -4,7 +4,7 @@
 #' solution of the 2-prey ODE
 #' \deqn{\frac{dN_1}{dt}=-\frac{a_1N_1}{1+a_1h_1N_1+a_2h_2N_2}P}{dN1/dt=-a1N1 P/(1+a1h1N1+a2h2N2))}
 #' \deqn{\frac{dN_2}{dt}=-\frac{a_2N_2}{1+a_1h_1N_1+a_2h_2N_2}P}{dN2/dt=-a2N2 P/(1+a1h1N1+a2h2N2))}
-#' to compute number of eaten prey.
+#' to compute number of eaten prey, see Rosenbaum et al. (2024).
 #' 
 #' Usage in brms formula:\cr\cr
 #' \verb{~ MS_Type2H_dyn(N0, N0.alt, ID, P, Time, a1, a2, h1, h2)}\cr\cr
@@ -21,6 +21,12 @@
 #' Requires the data to be in a specific "long" format. Use the function 
 #' \verb{convert_2sp_to_long()} to transform from a dataframe with columns 
 #' N01, N02, NE1, NE2
+#' 
+#' @references Rosenbaum, B., Li, J., Hirt, M. R., Ryser, R., & Brose, U. (2024). 
+#' Towards understanding interactions in a complex world: Design and analysis of 
+#' multi-species functional response experiments. 
+#' *Methods in Ecology and Evolution,* 15, 1704-1719. 
+#' https://doi.org/10.1111/2041-210X.14372
 
 #' @return Number of eaten prey
 #' @export

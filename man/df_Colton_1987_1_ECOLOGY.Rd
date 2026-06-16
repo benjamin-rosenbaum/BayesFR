@@ -17,13 +17,13 @@ A data frame with 108 rows and 6 variables:
 }
 \source{
 Colton, T.F. (1987).
-\emph{Extending functional response models to include a second prey type: an experimental test.}
-Ecology, 68: 900-912.
+Extending functional response models to include a second prey type: an experimental test.
+\emph{Ecology}, 68: 900-912.
 https://doi.org/10.2307/1938361
 
 Novak, M., & Stouffer, D. (2020).
-\emph{Data extracted for "Hidden layers of density dependence in consumer feeding rates."}
-Figshare.
+Data extracted for "Hidden layers of density dependence in consumer feeding rates."
+\emph{Figshare}.
 https://doi.org/10.6084/m9.figshare.12830792
 }
 \usage{
@@ -32,7 +32,7 @@ data(df_Colton_1987_1_ECOLOGY)
 \description{
 Feeding experiment data from Colton (1987) were downloaded from
 Figshare (Novak & Stouffer 2020). Eaten prey were not replaced during the
-experiment. Includes data for 10th—instar naiads of a damselfly feeding on a
+experiment. Includes data for 10th???instar naiads of a damselfly feeding on a
 cladoceran (Simocephalus serrulatus, species 1) and a copepod (Diaptomus
 spatulocrenatus, species 2).
 }

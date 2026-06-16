@@ -19,13 +19,13 @@
 #'
 #' @source
 #'   Davidson A. T., Hamman, E. A., McCoy M. W., and Vonesh J. R. (2021).
-#'   *Asymmetrical effects of temperature on stage-structured predator–prey interactions.*
-#'   Functional Ecology 35: 1041–1054.
+#'   Asymmetrical effects of temperature on stage-structured predator-prey interactions.
+#'   *Functional Ecology* 35: 1041-1054.
 #'   https://doi.org/10.1111/1365-2435.13777
 #'
 #'   Davidson A. T., Hamman, E. A., McCoy M. W., and Vonesh J. R. (2020).
-#'   *Asymmetrical effects of temperature on stage-structured predator–prey interactions.*
-#'   Dryad Digital Repository.
+#'   Asymmetrical effects of temperature on stage-structured predator-prey interactions.
+#'   *Dryad Digital Repository*.
 #'   https://doi.org/10.5061/dryad.j6q573nd4
 #'
 #' @usage data(df_Davidson_et_al_2021_FUN_ECOL)

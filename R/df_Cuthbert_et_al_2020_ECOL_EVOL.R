@@ -19,13 +19,13 @@
 #'
 #' @source
 #'   Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., & Alexander M.E. (2020a).
-#'   *Influence of intra- and interspecific variation in predator–prey body size ratios on trophic interaction strengths.*
-#'   Ecology and Evolution, 10:5946–5962.
+#'   *Influence of intra- and interspecific variation in predator-prey body size ratios on trophic interaction strengths.
+#'   *Ecology and Evolution*, 10:5946-5962.
 #'   https://doi.org/10.1002/ece3.6332
 #'
 #'   Cuthbert R. N., Wassermann R. J., Dalu T., Kaiser H., Weyl O. L. F., Dick J. T. A., Sentis A., McCoy M. W., & Alexander M.E. (2020b).
-#'   *Influence of intra- and interspecific variation in predator–prey body size ratios on trophic interaction strengths.*
-#'   Dryad Digital Repository.
+#'   Influence of intra- and interspecific variation in predator-prey body size ratios on trophic interaction strengths.
+#'   *Dryad Digital Repository*.
 #'   https://doi.org/10.5061/dryad.7m0cfxppt
 #'
 #' @usage data(df_Cuthbert_et_al_2020_ECOL_EVOL)

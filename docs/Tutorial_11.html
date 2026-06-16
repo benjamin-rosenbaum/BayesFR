@@ -383,7 +383,7 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">convert_2sp_to_long</span>(df.all)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>tibble [180 x 10] (S3: tbl_df/tbl/data.frame)
+<pre><code>tibble [180 × 10] (S3: tbl_df/tbl/data.frame)
  $ N01      : int [1:180] 0 0 0 0 0 0 0 0 0 0 ...
  $ N02      : num [1:180] 24 24 24 72 72 72 120 120 120 168 ...
  $ P0       : num [1:180] 1 1 1 1 1 1 1 1 1 1 ...
@@ -434,10 +434,10 @@ Formula: NE | trials(N0) ~ MS_Type2H_dyn(N0, N0.alt, ID, P0, Time, a1, a2, h1, h
 
 Regression Coefficients:
              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-a1_Intercept     0.63      0.06     0.52     0.75 1.01     1322     1466
-a2_Intercept     0.91      0.08     0.76     1.10 1.00     1466     1289
-h1_Intercept     0.01      0.00     0.01     0.02 1.00     1507     1905
-h2_Intercept     0.03      0.00     0.02     0.03 1.00     2044     1955
+a1_Intercept     0.62      0.06     0.52     0.74 1.00     1277     1547
+a2_Intercept     0.91      0.08     0.76     1.08 1.00     1368     1692
+h1_Intercept     0.01      0.00     0.01     0.02 1.00     1551     1666
+h2_Intercept     0.03      0.00     0.02     0.03 1.00     1621     1987
 
 Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
@@ -502,7 +502,7 @@ Posterior probabilities of point hypotheses assume equal prior probabilities.</c
 <div class="cell-output cell-output-stdout">
 <pre><code>Hypothesis Tests for class b:
                 Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio
-1 ((1/h1_Intercept)... &gt; 0    34.62      5.95    25.72    44.94        Inf
+1 ((1/h1_Intercept)... &gt; 0     34.8      5.88    25.82    44.66        Inf
   Post.Prob Star
 1         1    *
 ---
@@ -638,6 +638,189 @@ Posterior probabilities of point hypotheses assume equal prior probabilities.</c
 </section>
 <section id="alternative-msfr-models" class="level2">
 <h2 class="anchored" data-anchor-id="alternative-msfr-models">Alternative MSFR models</h2>
+<p>We fit alternative models to test for sigmoidal (type 3) behavior and / or switching of prey preferences, using model comparison. See <a href="https://doi.org/10.1111/2041-210X.14372">Rosenbaum et al.&nbsp;(2024)</a> for an in-depth description of the 4 MSFR models.</p>
+<p>The <strong>Holling type 2 MSFR</strong> above shows type 2 behavior in single-prey and also in multi-prey scenarios. The preference in the 2-prey scenario is purely determined by the ratio of attack rates <span class="math inline">\(\phi_{12}=\frac{a_1}{a_2}\)</span>. Also, preference is density-independent and cannot switch, as seen in the last figure.</p>
+<p>Alternatively, the <strong>Holling type 3 MSFR</strong> <span class="math display">\[F_i(N_1, \dots, N_m)=\frac{b_iN_i^{1+q}}{1+\sum_{k=1}^mb_kh_kN_k^{1+q}}\]</span> shows sigmoidal behavior in single-prey and also in multi-prey scenarios for <span class="math inline">\(q&gt;0\)</span>. Preference <span class="math inline">\(\phi_{12}=\frac{b_1N_1^q}{b_2N_2^q}\)</span> is now density-dependent and <em>can</em> switch. Switching is described as <strong>passive</strong>, since all parameters could theoretically be estimated from single-prey data alone.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>FR.formula <span class="ot">=</span> <span class="fu">bf</span>( NE <span class="sc">|</span> <span class="fu">trials</span>(N0) <span class="sc">~</span> <span class="fu">MS_Type3H_dyn</span>(N0,N0.alt,ID,P0,Time,b1,b2,h1,h2,q)<span class="sc">/</span>N0,</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                 b1<span class="sc">+</span>b2<span class="sc">+</span>h1<span class="sc">+</span>h2<span class="sc">+</span>q <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">nl =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>FR.priors  <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"b1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"b2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"q"</span>, <span class="at">lb=</span><span class="dv">0</span>))</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>fit<span class="fl">.2</span> <span class="ot">=</span> <span class="fu">brm</span>(FR.formula,</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">stanvars =</span> <span class="fu">stanvar</span>(<span class="at">scode =</span> MS_Type3H_dyn_code,</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>                               <span class="at">block =</span> <span class="st">"functions"</span>),</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">family   =</span> <span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"identity"</span>),</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">prior    =</span> FR.priors,</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">data     =</span> df,</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">cores    =</span> <span class="dv">4</span>)</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="fu">expose_functions</span>(fit<span class="fl">.2</span>, <span class="at">vectorize =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit<span class="fl">.2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: binomial 
+  Links: mu = identity 
+Formula: NE | trials(N0) ~ MS_Type3H_dyn(N0, N0.alt, ID, P0, Time, b1, b2, h1, h2, q)/N0 
+         b1 ~ 1
+         b2 ~ 1
+         h1 ~ 1
+         h2 ~ 1
+         q ~ 1
+   Data: df (Number of observations: 180) 
+  Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+         total post-warmup draws = 4000
+
+Regression Coefficients:
+             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+b1_Intercept     0.53      0.07     0.39     0.69 1.00     1197     1588
+b2_Intercept     0.78      0.11     0.59     1.00 1.00     1182     1360
+h1_Intercept     0.01      0.00     0.01     0.02 1.00     2097     1893
+h2_Intercept     0.03      0.00     0.02     0.03 1.00     2084     2055
+q_Intercept      0.05      0.03     0.00     0.12 1.00     1073     1322
+
+Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+<p><strong>Yodzis’ MSFR</strong> <span class="math display">\[F_i(N_1, \dots, N_m)=\frac{w_ia_iN_i^{1+r}}{\sum_k^m w_kN_k^r  +\sum_{k=1}^mw_ka_kh_kN_k^{1+r}}\]</span> collapses to a type 2 FR in single-prey scenarios, but features sigmoidal behavior for <span class="math inline">\(r&gt;0\)</span> and can also produce switching. For 2-prey systems, we have a preference weight <span class="math inline">\(w_1\)</span>, <span class="math inline">\(w_2=1-w_1\)</span> and preference <span class="math inline">\(\phi_{12}=\frac{w_1a_1N_1^r}{w_2a_2N_2^r}\)</span> is density-dependent. Here, potential switching is <strong>active</strong> and requires 2-prey data to estimate all parameters.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>FR.formula <span class="ot">=</span> <span class="fu">bf</span>( NE <span class="sc">|</span> <span class="fu">trials</span>(N0) <span class="sc">~</span> <span class="fu">MS_TypeY_dyn</span>(N0,N0.alt,ID,P0,Time,a1,a2,h1,h2,w1,r)<span class="sc">/</span>N0,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                 a1<span class="sc">+</span>a2<span class="sc">+</span>h1<span class="sc">+</span>h2<span class="sc">+</span>w1<span class="sc">+</span>r <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">nl =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>FR.priors  <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"a1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"a2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">beta</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">nlpar=</span><span class="st">"w1"</span>, <span class="at">lb=</span><span class="dv">0</span>, <span class="at">ub=</span><span class="dv">1</span>),</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"r"</span>, <span class="at">lb=</span><span class="dv">0</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>fit<span class="fl">.3</span> <span class="ot">=</span> <span class="fu">brm</span>(FR.formula,</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">stanvars =</span> <span class="fu">stanvar</span>(<span class="at">scode =</span> MS_TypeY_dyn_code,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                               <span class="at">block =</span> <span class="st">"functions"</span>),</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">family   =</span> <span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"identity"</span>),</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">prior    =</span> FR.priors,</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">data     =</span> df,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">cores    =</span> <span class="dv">4</span>)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="fu">expose_functions</span>(fit<span class="fl">.3</span>, <span class="at">vectorize =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit<span class="fl">.3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: binomial 
+  Links: mu = identity 
+Formula: NE | trials(N0) ~ MS_TypeY_dyn(N0, N0.alt, ID, P0, Time, a1, a2, h1, h2, w1, r)/N0 
+         a1 ~ 1
+         a2 ~ 1
+         h1 ~ 1
+         h2 ~ 1
+         w1 ~ 1
+         r ~ 1
+   Data: df (Number of observations: 180) 
+  Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+         total post-warmup draws = 4000
+
+Regression Coefficients:
+             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+a1_Intercept     0.99      0.13     0.76     1.29 1.00     1445     1541
+a2_Intercept     1.23      0.16     0.96     1.59 1.00     1675     2110
+h1_Intercept     0.02      0.00     0.01     0.02 1.00     1728     1858
+h2_Intercept     0.02      0.00     0.02     0.03 1.00     1922     2375
+w1_Intercept     0.46      0.05     0.37     0.55 1.00     1267     1768
+r_Intercept      0.11      0.05     0.02     0.20 1.00     1581      995
+
+Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+<p>Finally, the <strong>generalized switching MSFR</strong> <span class="math display">\[F_i(N_1, \dots, N_m)=\frac{w_ib_iN_i^{1+q+r}}{\sum_k^m w_kN_k^r  +\sum_{k=1}^mw_kb_kh_kN_k^{1+q+r}}\]</span> generalizes all previous models. It features sigmoidal behavior in single-prey scenarios for <span class="math inline">\(q&gt;0\)</span>, which can be stronger in multi-prey scenarios for <span class="math inline">\(r&gt;0\)</span>. Preference <span class="math inline">\(\phi_{12}=\frac{w_1b_1N_1^{q+r}}{w_2b_2N_2^{q+r}}\)</span> is density-dependent and potential switching is <strong>active</strong>, too.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>FR.formula <span class="ot">=</span> <span class="fu">bf</span>( NE <span class="sc">|</span> <span class="fu">trials</span>(N0) <span class="sc">~</span> <span class="fu">MS_TypeZ_dyn</span>(N0,N0.alt,ID,P0,Time,b1,b2,h1,h2,w1,q,r)<span class="sc">/</span>N0,</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                 b1<span class="sc">+</span>b2<span class="sc">+</span>h1<span class="sc">+</span>h2<span class="sc">+</span>w1<span class="sc">+</span>q<span class="sc">+</span>r <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">nl =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>FR.priors  <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"b1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"b2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h1"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">10</span>), <span class="at">nlpar=</span><span class="st">"h2"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">beta</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">nlpar=</span><span class="st">"w1"</span>, <span class="at">lb=</span><span class="dv">0</span>, <span class="at">ub=</span><span class="dv">1</span>),</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"q"</span>, <span class="at">lb=</span><span class="dv">0</span>),</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>               <span class="fu">prior</span>(<span class="fu">exponential</span>(<span class="dv">1</span>), <span class="at">nlpar=</span><span class="st">"r"</span>, <span class="at">lb=</span><span class="dv">0</span>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>fit<span class="fl">.4</span> <span class="ot">=</span> <span class="fu">brm</span>(FR.formula,</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">stanvars =</span> <span class="fu">stanvar</span>(<span class="at">scode =</span> MS_TypeZ_dyn_code,</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>                               <span class="at">block =</span> <span class="st">"functions"</span>),</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">family   =</span> <span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"identity"</span>),</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">prior    =</span> FR.priors,</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">data     =</span> df,</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">cores    =</span> <span class="dv">4</span>,</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> <span class="st">"Tutorial_11_fit_z"</span>)</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="fu">expose_functions</span>(fit<span class="fl">.4</span>, <span class="at">vectorize =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit<span class="fl">.4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: binomial 
+  Links: mu = identity 
+Formula: NE | trials(N0) ~ MS_TypeZ_dyn(N0, N0.alt, ID, P0, Time, b1, b2, h1, h2, w1, q, r)/N0 
+         b1 ~ 1
+         b2 ~ 1
+         h1 ~ 1
+         h2 ~ 1
+         w1 ~ 1
+         q ~ 1
+         r ~ 1
+   Data: df (Number of observations: 180) 
+  Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+         total post-warmup draws = 4000
+
+Regression Coefficients:
+             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+b1_Intercept     0.80      0.16     0.53     1.13 1.01     1227     1326
+b2_Intercept     1.00      0.19     0.67     1.40 1.00     1133      888
+h1_Intercept     0.02      0.00     0.01     0.02 1.00     1687     1686
+h2_Intercept     0.02      0.00     0.02     0.03 1.00     2086     2119
+w1_Intercept     0.46      0.04     0.37     0.54 1.00     1764     1889
+q_Intercept      0.07      0.05     0.00     0.17 1.01      876      746
+r_Intercept      0.06      0.04     0.00     0.16 1.00     1268     1347
+
+Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+<p>Model comparison supports the most simple model, the Holling type 2 MSFR. Hence, the predator-prey interaction does not include any type 3 behavior, nor does it include prey preference switching.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">LOO</span>(fit<span class="fl">.1</span>, fit<span class="fl">.2</span>, fit<span class="fl">.3</span>, fit<span class="fl">.4</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> model elpd_diff se_diff p_worse       diag_diff      diag_elpd
+ fit.1       0.0     0.0      NA                               
+ fit.2      -0.5     2.0    0.60 |elpd_diff| &lt; 4 1 k_psis &gt; 0.7
+ fit.4     -37.1    17.1    0.99                 1 k_psis &gt; 0.7
+ fit.3     -37.2    16.7    0.99                 1 k_psis &gt; 0.7</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Diagnostic flags present.
+See ?`loo-glossary` (sections `diag_diff` and `diag_elpd`)
+or https://mc-stan.org/loo/reference/loo-glossary.html.</code></pre>
+</div>
+</div>
 
 
 </section>
