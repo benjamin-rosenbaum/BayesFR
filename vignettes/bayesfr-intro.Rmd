@@ -97,7 +97,6 @@ Finally, we run the model calling `brm()` with the model formula as the first ar
 fit.1 = readRDS(
     system.file("extdata", "Tutorial_01_fit1.rds", package = "BayesFR")
 )
-expose_functions(fit.1, vectorize=TRUE)
 ```
 
 ```{r, eval=FALSE}
@@ -187,7 +186,6 @@ We fit the model calling `brm()` with the model formula. The Binomial distributi
 fit.1 = readRDS(
     system.file("extdata", "Tutorial_02_fit1.rds", package = "BayesFR")
 )
-expose_functions(fit.1, vectorize=TRUE)
 ```
 
 ```{r, eval=FALSE}
