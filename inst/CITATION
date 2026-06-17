@@ -1,0 +1,27 @@
+bibentry(
+  bibtype = "Article",
+  title   = "Fitting functional responses: Direct parameter estimation by simulating differential equations",
+  author  = c(person("Benjamin", "Rosenbaum"),
+              person("Bj\u00f6rn C.", "Rall")),
+  journal = "Methods in Ecology and Evolution",
+  year    = "2018",
+  volume  = "9",
+  pages   = "2076--2090",
+  doi     = "10.1111/2041-210X.13039"
+)
+
+bibentry(
+  bibtype = "Article",
+  title   = "Towards understanding interactions in a complex world: Design and analysis of multi-species functional response experiments",
+  author  = c(person("Benjamin", "Rosenbaum"),
+              person("Jingyi", "Li"),
+              person("Myriam R.", "Hirt"),
+              person("Remo", "Ryser"),
+              person("Ulrich", "Brose")),
+  journal = "Methods in Ecology and Evolution",
+  year    = "2024",
+  volume  = "15",
+  pages   = "1704--1719",
+  doi     = "10.1111/2041-210X.14372"
+)
+
