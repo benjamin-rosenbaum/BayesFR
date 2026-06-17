@@ -1,11 +1,11 @@
 /* Fixed hex sticker – right side */
 .hexsticker-fixed {
   position: fixed;
-  right: 1.2rem;
-  top: 5rem;          /* adjust to clear navbar */
-  width: 110px;
+  right: calc(50% - 600px);
+  top: 5rem;
+  width: 180px;
   z-index: 999;
-  opacity: 0.92;
+  opacity: 0.9;
   transition: opacity 0.2s;
 }
 .hexsticker-fixed:hover {
