@@ -374,7 +374,47 @@
     "href": "index.html",
     "title": "Overview",
     "section": "",
-    "text": "Easy application of Bayesian inference for functional responses via brms.\nThis package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.\nThe BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.\nFor an introduction to brms, see for example here.\n# installation\nlibrary(remotes)\ninstall_github(\"benjamin-rosenbaum/BayesFR\")",
+    "text": "Easy application of Bayesian inference for functional responses via brms.\nThis package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.\nThe BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.\nFor an introduction to brms, see for example here.",
+    "crumbs": [
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#fitting-functional-responses-in-1--and-2-prey-systems",
+    "href": "index.html#fitting-functional-responses-in-1--and-2-prey-systems",
+    "title": "Overview",
+    "section": "",
+    "text": "Easy application of Bayesian inference for functional responses via brms.\nThis package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.\nThe BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.\nFor an introduction to brms, see for example here.",
+    "crumbs": [
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "Overview",
+    "section": "Installation",
+    "text": "Installation\nlibrary(remotes)\ninstall_github(\"benjamin-rosenbaum/BayesFR\")",
+    "crumbs": [
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#example",
+    "href": "index.html#example",
+    "title": "Overview",
+    "section": "Example",
+    "text": "Example\n# Example code for fitting a Type 3 FR dynamical model:\nFR.formula = bf( NE | trials(N0) ~ Type3H_dyn(N0,P0,Time,b,h)/N0,\n                 b~1, h~1, nl = TRUE)\nFR.priors  = c(prior(exponential(1.0), nlpar=\"b\", lb=0),\n               prior(exponential(1.0), nlpar=\"h\", lb=0) )\nfit.1      = brm(FR.formula,\n                 family   = binomial(link=\"identity\"),\n                 prior    = FR.priors,\n                 stanvars = stanvar(scode=Type3H_dyn_code, block=\"functions\"),\n                 data     = df )",
+    "crumbs": [
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "Overview",
+    "section": "References",
+    "text": "References\nWhile a publication is in progress, please cite Rosenbaum & Rall (2018) for single-prey systems, or Rosenbaum et al. (2024) for multi-prey systems. The FoRAGE database (Uiterwaal et al. 2022) was searched for suitable example datasets, and data was downloaded from original sources when available.\nRosenbaum B. & Rall B. C. (2018). Fitting functional responses: Direct parameter estimation by simulating differential equations. Methods in Ecology and Evolution, 9(10), 2076–2090. https://doi.org/10.1111/2041-210X.13039\nRosenbaum B., Li J., Hirt M. R., Ryser R. & Brose, U. (2024). Towards understanding interactions in a complex world: Design and analysis of multi‐species functional response experiments. Methods in Ecology and Evolution, 15(9), 1704–1719. https://doi.org/10.1111/2041-210x.14372\nUiterwaal S. F., Lagerstrom I. T., Lyon S. R. & DeLong J. P. (2022). FoRAGE Database: A Compilation of Functional Responses for Consumers and Parasitoids. Ecology 103(7): e3706. https://doi.org/10.1002/ecy.3706",
     "crumbs": [
       "Overview"
     ]
