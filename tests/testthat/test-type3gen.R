@@ -1,5 +1,6 @@
+testthat::skip_on_cran()
+
 test_that("brm() fits Type3GenH model and predict() works", {
-  # skip_on_cran()
 
   data(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY)
   df <- subset(df_Sentis_et_al_2017_GLOBAL_CHANGE_BIOLOGY, ID == "Figure 1e")
@@ -32,11 +33,11 @@ test_that("brm() fits Type3GenH model and predict() works", {
   )
 
   expect_s3_class(fit, "brmsfit")
-#
+
   expose_functions(fit, vectorize = TRUE)
 
   preds <- predict(fit)
   expect_true(is.matrix(preds))
   expect_equal(nrow(preds), nrow(df))
-  expect_equal(ncol(preds), 4)  # Estimate, Est.Error, Q2.5, Q97.5
+  expect_equal(ncol(preds), 4)
 })
