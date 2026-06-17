@@ -20,11 +20,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-Easy application of Bayesian inference for functional responses via brms.
+This is just a minimal vignette. A full documentation with many tutorials is available here:
 
-This package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.
-
-The BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.
+[https://benjamin-rosenbaum.github.io/BayesFR/](https://benjamin-rosenbaum.github.io/BayesFR/).
 
 ```{r, eval=FALSE}
 # Example code for fitting a Type 3 FR dynamical model:
@@ -40,15 +38,18 @@ fit.1      = brm(FR.formula,
 ```
 
 
-## Minimal example: data with prey replacement
+## 1. Minimal example: data with prey replacement
 
-The first dataset is originally from [Michalko and Pekar (2017)](https://doi.org/10.1086/690501) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It contains experiments with a spider feeding on a pear psylla pest. With feeding trial data, we want to regress number of eaten prey $N_E$ against offered prey abundance $N_0$. All experiments were run for 7 hours and prey abundance $N_0$ was kept constant by replacing eaten prey.
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(BayesFR)
 library(brms)
 library(ggplot2)
+```
 
+The first dataset is originally from [Michalko and Pekar (2017)](https://doi.org/10.1086/690501) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It contains experiments with a spider feeding on a pear psylla pest. With feeding trial data, we want to regress number of eaten prey $N_E$ against offered prey abundance $N_0$. All experiments were run for 7 hours and prey abundance $N_0$ was kept constant by replacing eaten prey.
+
+
+```{r}
 data(df_Michalko_and_Pekar_2017_AM_NAT)
 df = subset(df_Michalko_and_Pekar_2017_AM_NAT, ID=="Figure 3c")
 head(df)
@@ -93,11 +94,6 @@ FR.priors  = c(prior(exponential(1.0), nlpar="a", lb=0),
 
 Finally, we run the model calling `brm()` with the model formula as the first argument. The Poisson distribution is specified in `family`, and it is necessary to use the identity-link to overwrite the default log-link (which is not required because model predictions are already positive). The model function `Type2H_fix` is provided by this package's `Type2H_fix_code` in `stanvars`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
 
-```{r, echo=FALSE, output=FALSE}
-fit.1 = readRDS(
-    system.file("extdata", "Tutorial_01_fit1.rds", package = "BayesFR")
-)
-```
 
 ```{r, eval=FALSE}
 fit.1 = brm(FR.formula,
@@ -112,36 +108,81 @@ expose_functions(fit.1, vectorize=TRUE)
 
 The summary table gives us some infos on the fitted model. In Bayesian statistics, we first have to check for **convergence** of the MCMC. Here, the `Rhat` column quantifies how well the chains have mixed, and a value <1.01 is aspired. 
 
-```{r}
+```{r, eval=FALSE}
 summary(fit.1)
 ```
 
+
+```{r, echo=FALSE}
+cat("  Family: poisson 
+   Links: mu = identity 
+ Formula: NE ~ Type2H_fix(N0, 1, 7, a, h) 
+          a ~ 1
+          h ~ 1
+    Data: df (Number of observations: 16) 
+   Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+          total post-warmup draws = 4000
+ 
+ Regression Coefficients:
+             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+ a_Intercept     0.65      0.36     0.26     1.59 1.00     1035      936
+ h_Intercept     0.70      0.18     0.37     1.06 1.00     1003      874
+ 
+ Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+ and Tail_ESS are effective sample size measures, and Rhat is the potential
+ scale reduction factor on split chains (at convergence, Rhat = 1).
+")
+```
+
+
 Additionally, a traceplot of the chains is helpful. If the plots in the right column look like fuzzy caterpillars, everything is fine. 
 
-```{r}
+```{r, eval=FALSE}
 plot(fit.1)
+```
+
+```{r, echo=FALSE, output=FALSE}
+p1 = readRDS(
+    system.file("extdata", "Tutorial_01_plot1.rds", package = "BayesFR")
+)
+p1[[1]]
 ```
 
 Our model estimated an attack rate mean of 0.64 [1/hour], and a handling time mean of 0.70 [hour], as also shown in the histograms of the posterior distribution in the left column above. 
 
 Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE}
 plot(conditional_effects(fit.1), points=TRUE)
 ```
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+p2 = readRDS(
+    system.file("extdata", "Tutorial_01_plot2.rds", package = "BayesFR")
+)
+plot(p2, points=TRUE)
+```
+
+
 The plot can be modified, for example using predictions starting in `N0=0`. Additionally, ggplot parameters can be specified in `point_args`. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE}
 plot(conditional_effects(fit.1, 
-                         effects="N0",
-                         int_conditions=data.frame(N0=seq(0,12,length.out=100))), 
+                         effects="N0", 
+                         int_conditions=data.frame(N0=seq(0.01,12,length.out=100))),
      points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2))
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+p3 = readRDS(
+    system.file("extdata", "Tutorial_01_plot3.rds", package = "BayesFR")
+)
+plot(p3, points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2))
 ```
 
 
 
-## Minimal example: data without prey replacement
+## 2. Minimal example: data without prey replacement
 
 This dataset is originally from [Hossie 
 and Murray (2010)](https://doi.org/10.1007/s00442-010-1568-6) and was made available in the FoRAGE database [(Uiterwaal et al. 2022)](https://doi.org/10.5063/F1RX99KB). It includes data for a dragonfly nymph predator feeding on tadpoles in three leaf litter treatments. Here, we will regress number of eaten prey $N_E$ against initial prey abundance $N_0$. All experiments were run for 24 hours and eaten prey were not replaced. We are using the high leaf litter treatment.
@@ -182,12 +223,6 @@ FR.priors  = c(prior(exponential(1.0), nlpar="b", lb=0),
 
 We fit the model calling `brm()` with the model formula. The Binomial distribution is specified in `family` with the identity link, overwriting the default logit link (which is not required here because success probabilities are already bounded between 0 and 1). `stanvars` contains this package's code for the prediction model `Type3H_dyn_code`. After the model is run, this function is made available to R via `expose_functions()`, which is required for computing model predictions. 
 
-```{r, echo=FALSE, output=FALSE}
-fit.1 = readRDS(
-    system.file("extdata", "Tutorial_02_fit1.rds", package = "BayesFR")
-)
-```
-
 ```{r, eval=FALSE}
 fit.1 = brm(FR.formula,
             family   = binomial(link="identity"),
@@ -201,22 +236,70 @@ expose_functions(fit.1, vectorize=TRUE)
 
 We check the summary table and the traceplots for MCMC convergence (`Rhat` values <1.01 and good mixing of the chains):
 
-```{r}
+```{r, eval=FALSE}
 summary(fit.1)
+```
+
+
+```{r, echo=FALSE}
+cat("  Family: binomial 
+   Links: mu = identity 
+ Formula: NE | trials(N0) ~ Type3H_dyn(N0, 1, 1, b, h)/N0 
+          b ~ 1
+          h ~ 1
+    Data: df (Number of observations: 29) 
+   Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;
+          total post-warmup draws = 4000
+ 
+ Regression Coefficients:
+             Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+ b_Intercept     0.26      0.06     0.16     0.41 1.00     1317     1495
+ h_Intercept     0.05      0.00     0.04     0.05 1.00     1207     1572
+ 
+ Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+ and Tail_ESS are effective sample size measures, and Rhat is the potential
+ scale reduction factor on split chains (at convergence, Rhat = 1).
+")
+```
+
+```{r, eval=FALSE}
 plot(fit.1)
 ```
 
+```{r, echo=FALSE, output=FALSE}
+p1 = readRDS(
+    system.file("extdata", "Tutorial_02_plot1.rds", package = "BayesFR")
+)
+p1[[1]]
+```
+
+
+
 Finally, we plot model predictions against the observed data with `conditional_effects()`. This function uses samples from the parameters' posterior distribution to compute posterior predictions of fitted values, which are displayed as mean fitted value (in blue) and 95% credible intervals (gray).
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE}
 plot(conditional_effects(fit.1), points=TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+p2 = readRDS(
+    system.file("extdata", "Tutorial_02_plot2.rds", package = "BayesFR")
+)
+plot(p2, points=TRUE)
 ```
 
 The plot can be modified to show the sigmoidal shape of the type 3 FR at low abundances. For a fully customizable plot, the output can also be saved in a ggplot object with `p = conditional_effects()`.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE}
 plot(conditional_effects(fit.1, 
                          effects="N0", 
-                         int_conditions=data.frame(N0=1:60)), 
-     points=TRUE, point_args=list(width=0.1, alpha=0.6, size=2))
+                         int_conditions=data.frame(N0=1:60)),
+     points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2))
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+p3 = readRDS(
+    system.file("extdata", "Tutorial_02_plot3.rds", package = "BayesFR")
+)
+plot(p3, points=TRUE, point_args=list(width=0.1, height=0.1, alpha=0.6, size=2))
 ```
