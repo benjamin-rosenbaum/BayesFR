@@ -13,7 +13,9 @@
 - Vignette chunks that call brm() use eval=FALSE for the same reason.
 
 ## Spell check notes
-- 'BayesFR' is the package name
-- 'brms' is a well-known R package on CRAN
 - 'trophic' is standard ecological terminology
 
+## Resubmission
+This is a resubmission. Changes based on reviewer feedback:
+- Single-quoted software names 'brms' and 'BayesFR' in Title and Description
+- Added method references with DOIs to Description field
