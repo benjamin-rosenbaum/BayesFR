@@ -255,17 +255,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://CRAN.R-project.org/package=BayesFR"><img src="https://www.r-pkg.org/badges/version/BayesFR.png" class="img-fluid figure-img"></a></p>
+<figcaption>CRAN status</figcaption>
+</figure>
+</div>
 <section id="fitting-functional-responses-in-1--and-2-prey-systems" class="level2">
 <h2 class="anchored" data-anchor-id="fitting-functional-responses-in-1--and-2-prey-systems">Fitting functional responses in 1- and 2-prey systems</h2>
 <p>Easy application of Bayesian inference for functional responses via <a href="https://paulbuerkner.com/brms/">brms</a>.</p>
 <p>This package allows to fit various FR models for single- and multi-prey experiments by providing nonlinear prediction functions for brms. It uses dynamical prediction models to correct for prey depletion. The brms framework facilitates statistical modeling and enables users to conveniently incorporate covariates such as temperature gradients, experimental treatment variables, or random effects that account for grouping in experimental units. Default brms functions make it easy to perform model checking, model comparison and hypothesis testing. Potential statistical issues with data from feeding trials, such as overdispersion, can be resolved by effortlessly switching between likelihood functions.</p>
 <p>The BayesFR package, together with its tutorials, provides students and researchers with a comprehensive and integrated statistical framework for easily testing their hypotheses on trophic interactions.</p>
 <p>For an introduction to brms, see for example <a href="https://github.com/benjamin-rosenbaum/bayesian-intro">here</a>.</p>
+<p>If you would like a specific functional response model to be added, please contact me!</p>
 </section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(remotes)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install_github</span>(<span class="st">"benjamin-rosenbaum/BayesFR"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"BayesFR"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="example" class="level2">
 <h2 class="anchored" data-anchor-id="example">Example</h2>

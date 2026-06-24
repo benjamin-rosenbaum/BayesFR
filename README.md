@@ -1,5 +1,5 @@
 # BayesFR package <img src="man/figures/BayesFR_hex.png" align="right" height="200"/>
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18940186.svg)](https://doi.org/10.5281/zenodo.18940186)
+[![CRAN status](https://www.r-pkg.org/badges/version/BayesFR)](https://CRAN.R-project.org/package=BayesFR)
 
 ## Fitting functional responses in 1- and 2-prey systems
 
@@ -15,12 +15,12 @@ testing their hypotheses on trophic interactions.
 For an introduction to brms, see for example 
 [here](https://github.com/benjamin-rosenbaum/bayesian-intro). 
 
+If you would like a specific functional response model to be added, please contact me!
 
 ## Installation
 
 ```r
-library(remotes)
-install_github("benjamin-rosenbaum/BayesFR")
+install.packages("BayesFR")
 ```
 
 ## Tutorials
